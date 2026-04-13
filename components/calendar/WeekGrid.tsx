@@ -1,7 +1,6 @@
 'use client'
 
 import { format, isSameDay } from 'date-fns'
-import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import type { Habit, HabitLog } from '@/types'
 import { isHabitCompleted, getCompletionPercent } from '@/lib/dateUtils'
@@ -47,7 +46,7 @@ export function WeekGrid({ habits, logs, days }: WeekGridProps) {
             style={{ gridTemplateColumns: `140px repeat(7, 1fr)` }}
           >
             <div className="flex items-center gap-2 pr-3 min-w-0">
-              <span className="text-base flex-shrink-0">{habit.icon}</span>
+              <span className="text-base shrink-0">{habit.icon}</span>
               <span className="text-xs truncate" style={{ color: 'var(--text-primary)' }}>
                 {habit.name}
               </span>

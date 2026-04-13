@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid'
-import type { Habit, HabitLog, HabitType, Frequency } from '@/types'
+import type { Habit, HabitLog } from '@/types'
 import { todayStr, formatDate } from './dateUtils'
 
 export const createHabit = (

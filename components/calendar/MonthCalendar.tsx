@@ -1,6 +1,6 @@
 'use client'
 
-import { format, isSameMonth, isToday, parseISO } from 'date-fns'
+import { format, isToday } from 'date-fns'
 import type { Habit, HabitLog } from '@/types'
 import { monthDays, isHabitCompleted, getCompletionPercent } from '@/lib/dateUtils'
 

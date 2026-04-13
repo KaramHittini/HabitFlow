@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Minus } from 'lucide-react'
+import { Minus } from 'lucide-react'
 import { ProgressRing } from '@/components/ui/ProgressRing'
 
 interface CounterButtonProps {

@@ -35,7 +35,7 @@ export default function WelcomePage() {
             border: '1px solid var(--border)',
             color: 'var(--text-primary)',
           }}
-          animate={{ y: [0, -window.innerHeight - 200] }}
+          animate={{ y: [0, -1400] }}
           transition={{
             delay: card.delay,
             duration: 8 + i * 0.8,

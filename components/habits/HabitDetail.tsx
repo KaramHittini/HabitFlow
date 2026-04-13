@@ -13,7 +13,6 @@ import {
 import { MonthCalendar } from '@/components/calendar/MonthCalendar'
 import { HabitBarChart } from '@/components/charts/HabitBarChart'
 import { HabitSheet } from './HabitSheet'
-import { ProgressRing } from '@/components/ui/ProgressRing'
 
 interface HabitDetailProps {
   habit: Habit

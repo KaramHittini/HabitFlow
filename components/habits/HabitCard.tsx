@@ -4,9 +4,9 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { Flame, Check, MoreVertical } from 'lucide-react'
-import type { Habit, HabitLog } from '@/types'
+import type { Habit } from '@/types'
 import { useAppStore } from '@/store/useAppStore'
-import { todayStr, isHabitCompleted, getCompletionPercent, calculateStreak } from '@/lib/dateUtils'
+import { todayStr, isHabitCompleted, calculateStreak } from '@/lib/dateUtils'
 import { createLog } from '@/lib/habitUtils'
 import { CounterButton } from './CounterButton'
 import { TimerButton } from './TimerButton'
@@ -77,7 +77,7 @@ export function HabitCard({ habit, onEdit }: HabitCardProps) {
       >
         {/* Icon */}
         <div
-          className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+          className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0"
           style={{ background: habit.color + '22' }}
         >
           {habit.icon}
@@ -96,7 +96,7 @@ export function HabitCard({ habit, onEdit }: HabitCardProps) {
               {habit.name}
             </span>
             {streak >= 1 && (
-              <span className="text-xs flex items-center gap-0.5 flex-shrink-0">
+              <span className="text-xs flex items-center gap-0.5 shrink-0">
                 <Flame size={11} className="text-orange-400" />
                 <span style={{ color: 'var(--text-secondary)' }}>{streak}</span>
               </span>
@@ -111,7 +111,7 @@ export function HabitCard({ habit, onEdit }: HabitCardProps) {
       </div>
 
       {/* Action */}
-      <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
         {habit.type === 'check' && (
           <motion.button
             onClick={handleCheck}
