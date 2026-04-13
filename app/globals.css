@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+/* ── Design Tokens ── */
+:root {
+  --bg-base: #0b0c10;
+  --bg-card: #13141a;
+  --bg-surface: #1c1d26;
+  --border: #ffffff0f;
+  --text-primary: #f0f0f5;
+  --text-secondary: #8a8a9a;
+  --accent-blue: #4f8ef7;
+  --accent-green: #3ecf6b;
+  --accent-orange: #f97316;
+  --accent-purple: #a78bfa;
+  --accent-pink: #f472b6;
+  --accent-yellow: #fbbf24;
+  --accent-red: #f87171;
+  --accent-cyan: #22d3ee;
+}
+
+[data-theme="light"] {
+  --bg-base: #f4f5f9;
+  --bg-card: #ffffff;
+  --bg-surface: #eef0f6;
+  --border: #0000000d;
+  --text-primary: #111118;
+  --text-secondary: #666680;
+}
+
+@theme inline {
+  --color-bg-base: var(--bg-base);
+  --color-bg-card: var(--bg-card);
+  --color-bg-surface: var(--bg-surface);
+  --color-border: var(--border);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-green: var(--accent-green);
+  --color-accent-orange: var(--accent-orange);
+  --color-accent-purple: var(--accent-purple);
+  --color-accent-pink: var(--accent-pink);
+  --color-accent-yellow: var(--accent-yellow);
+  --color-accent-red: var(--accent-red);
+  --color-accent-cyan: var(--accent-cyan);
+}
+
+/* ── Base ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  transition: background 0.3s, color 0.3s;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-dm-sans, 'DM Sans', sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  min-height: 100dvh;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+/* ── Animated Gradient Mesh (Onboarding) ── */
+@keyframes meshMove1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, -30px) scale(1.1); }
+}
+@keyframes meshMove2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-30px, 40px) scale(1.05); }
+}
+@keyframes meshMove3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(20px, 20px) scale(1.08); }
+  66% { transform: translate(-20px, -10px) scale(0.95); }
+}
+@keyframes floatUp {
+  0% { transform: translateY(0px) rotate(0deg); opacity: 0.7; }
+  100% { transform: translateY(-120vh) rotate(15deg); opacity: 0; }
+}
+@keyframes confettiFall {
+  0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+.gradient-mesh {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.gradient-mesh::before {
+  content: '';
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(79,142,247,0.15) 0%, transparent 70%);
+  top: -100px;
+  left: -100px;
+  animation: meshMove1 8s ease-in-out infinite;
+}
+.gradient-mesh::after {
+  content: '';
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(167,139,250,0.12) 0%, transparent 70%);
+  bottom: -100px;
+  right: -100px;
+  animation: meshMove2 10s ease-in-out infinite;
+}
+.gradient-mesh-extra {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(62,207,107,0.10) 0%, transparent 70%);
+  top: 40%;
+  left: 40%;
+  animation: meshMove3 12s ease-in-out infinite;
+  pointer-events: none;
+}
