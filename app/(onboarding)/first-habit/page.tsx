@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
 import { ColorPicker } from '@/components/ui/ColorPicker'
 import { EmojiPicker } from '@/components/ui/EmojiPicker'
 import { SegmentedControl } from '@/components/ui/SegmentedControl'
@@ -11,14 +12,33 @@ import type { HabitType } from '@/types'
 import { useAppStore } from '@/store/useAppStore'
 import { createHabit } from '@/lib/habitUtils'
 
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="text-[10px] font-bold uppercase tracking-widest block mb-2" style={{ color: 'var(--text-muted)' }}>
+        {label}
+      </label>
+      {children}
+    </div>
+  )
+}
+
 export default function FirstHabitPage() {
   const router = useRouter()
   const { addHabit } = useAppStore()
-
-  const [name, setName] = useState('')
-  const [icon, setIcon] = useState('💧')
+  const [name,  setName]  = useState('')
+  const [icon,  setIcon]  = useState('💧')
   const [color, setColor] = useState('#22d3ee')
-  const [type, setType] = useState<HabitType>('check')
+  const [type,  setType]  = useState<HabitType>('check')
+  const pageRef = useRef<HTMLDivElement>(null)
+
+  useGSAP(() => {
+    gsap.fromTo(
+      pageRef.current!.querySelectorAll('.anim-in'),
+      { y: 20, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.4, stagger: 0.07, ease: 'power3.out', delay: 0.05 }
+    )
+  }, [])
 
   const handleCreate = () => {
     if (!name.trim()) return
@@ -26,75 +46,84 @@ export default function FirstHabitPage() {
     router.push('/ready')
   }
 
+  const inputCls = "w-full rounded-2xl px-4 py-3 text-sm focus:outline-none transition-all"
+  const inputStyle = {
+    background: 'var(--bg-elevated)',
+    color: 'var(--text-primary)',
+    border: '1px solid var(--border)',
+  }
+
   return (
-    <div className="min-h-dvh flex flex-col px-6 py-12" style={{ background: 'var(--bg-base)' }}>
-      <motion.div
-        className="flex flex-col gap-5 max-w-sm mx-auto w-full"
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <div>
-          <h1
-            className="text-3xl font-bold mb-2"
-            style={{ fontFamily: 'var(--font-bricolage)', color: 'var(--text-primary)' }}
-          >
+    <div
+      ref={pageRef}
+      className="min-h-dvh flex flex-col px-5 py-12 overflow-y-auto"
+      style={{ background: 'var(--bg-base)' }}
+    >
+      <div className="flex flex-col gap-5 max-w-sm mx-auto w-full">
+        <div className="anim-in">
+          <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--accent-blue)' }}>Step 3</p>
+          <h1 className="text-3xl font-bold font-display mb-1" style={{ color: 'var(--text-primary)' }}>
             Create your<br />first habit
           </h1>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            You can add more habits after setup
-          </p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>You can add more after setup</p>
         </div>
 
-        <HabitPreviewCard name={name} icon={icon} color={color} />
-
-        {/* Name */}
-        <input
-          autoFocus
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Habit name (e.g. Drink water)"
-          className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none"
-          style={{ background: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
-        />
-
-        {/* Emoji */}
-        <div>
-          <label className="text-xs font-medium mb-2 block" style={{ color: 'var(--text-secondary)' }}>ICON</label>
-          <EmojiPicker value={icon} onChange={setIcon} />
+        <div className="anim-in">
+          <HabitPreviewCard name={name} icon={icon} color={color} />
         </div>
 
-        {/* Color */}
-        <div>
-          <label className="text-xs font-medium mb-2 block" style={{ color: 'var(--text-secondary)' }}>COLOR</label>
-          <ColorPicker value={color} onChange={setColor} />
+        <div className="anim-in">
+          <Field label="Name">
+            <input
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Drink water"
+              className={inputCls}
+              style={inputStyle}
+            />
+          </Field>
         </div>
 
-        {/* Type */}
-        <div>
-          <label className="text-xs font-medium mb-2 block" style={{ color: 'var(--text-secondary)' }}>TYPE</label>
-          <SegmentedControl
-            options={[
-              { label: '✓ Check', value: 'check' as HabitType },
-              { label: '+ Counter', value: 'counter' as HabitType },
-              { label: '⏱ Timer', value: 'timer' as HabitType },
-            ]}
-            value={type}
-            onChange={setType}
-            className="w-full"
-          />
+        <div className="anim-in">
+          <Field label="Icon">
+            <EmojiPicker value={icon} onChange={setIcon} />
+          </Field>
         </div>
 
-        <motion.button
+        <div className="anim-in">
+          <Field label="Color">
+            <ColorPicker value={color} onChange={setColor} />
+          </Field>
+        </div>
+
+        <div className="anim-in">
+          <Field label="Type">
+            <SegmentedControl
+              options={[
+                { label: '✓  Check',   value: 'check'   as HabitType },
+                { label: '+  Counter', value: 'counter' as HabitType },
+                { label: '⏱  Timer',  value: 'timer'   as HabitType },
+              ]}
+              value={type}
+              onChange={setType}
+              className="w-full"
+            />
+          </Field>
+        </div>
+
+        <button
           onClick={handleCreate}
           disabled={!name.trim()}
-          whileTap={{ scale: 0.97 }}
-          className="w-full py-4 rounded-2xl font-semibold text-white mt-2 disabled:opacity-40"
-          style={{ background: color }}
+          className="anim-in w-full py-4 rounded-2xl font-bold text-white active:scale-[0.98] transition-transform disabled:opacity-30"
+          style={{
+            background: `linear-gradient(135deg, ${color}, ${color}bb)`,
+            boxShadow: `0 8px 24px ${color}44`,
+          }}
         >
           Create Habit
-        </motion.button>
-      </motion.div>
+        </button>
+      </div>
     </div>
   )
 }

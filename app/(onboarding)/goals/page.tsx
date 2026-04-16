@@ -1,44 +1,47 @@
 'use client'
 
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
 import { GoalCard } from '@/components/onboarding/GoalCard'
 import { GOAL_CATEGORIES } from '@/lib/habitUtils'
 
 export default function GoalsPage() {
-  const router = useRouter()
+  const router   = useRouter()
   const [selected, setSelected] = useState<string[]>([])
+  const pageRef  = useRef<HTMLDivElement>(null)
+  const gridRef  = useRef<HTMLDivElement>(null)
+
+  useGSAP(() => {
+    const tl = gsap.timeline()
+    tl.fromTo('.goals-heading', { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: 'power3.out' })
+      .fromTo(gridRef.current!.children, { y: 20, opacity: 0, scale: 0.92 },
+        { y: 0, opacity: 1, scale: 1, duration: 0.4, stagger: 0.04, ease: 'power3.out' }, '-=0.1')
+      .fromTo('.goals-btn', { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: 'power3.out' }, '-=0.1')
+  }, [])
 
   const toggle = (label: string) =>
-    setSelected((prev) =>
-      prev.includes(label) ? prev.filter((s) => s !== label) : [...prev, label]
-    )
+    setSelected((prev) => prev.includes(label) ? prev.filter((s) => s !== label) : [...prev, label])
 
   return (
     <div
-      className="min-h-dvh flex flex-col px-6 py-12"
+      ref={pageRef}
+      className="min-h-dvh flex flex-col px-5 py-14"
       style={{ background: 'var(--bg-base)' }}
     >
-      <motion.div
-        className="flex flex-col gap-8 max-w-sm mx-auto w-full"
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <div>
-          <h1
-            className="text-3xl font-bold mb-2"
-            style={{ fontFamily: 'var(--font-bricolage)', color: 'var(--text-primary)' }}
-          >
+      <div className="flex flex-col gap-7 max-w-sm mx-auto w-full">
+        <div className="goals-heading">
+          <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--accent-blue)' }}>Step 2</p>
+          <h1 className="text-3xl font-bold font-display mb-1.5" style={{ color: 'var(--text-primary)' }}>
             What do you want<br />to focus on?
           </h1>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Select all that apply — you can change this later
+            Pick one or more — you can change later
           </p>
         </div>
 
-        <div className="grid grid-cols-4 gap-3">
+        <div ref={gridRef} className="grid grid-cols-4 gap-3">
           {GOAL_CATEGORIES.map(({ label, emoji }) => (
             <GoalCard
               key={label}
@@ -50,15 +53,18 @@ export default function GoalsPage() {
           ))}
         </div>
 
-        <motion.button
+        <button
+          className="goals-btn w-full py-4 rounded-2xl font-bold text-white active:scale-[0.98] transition-transform"
+          style={{
+            background: 'var(--accent-blue)',
+            boxShadow: '0 8px 24px rgba(79,142,247,0.3)',
+            opacity: selected.length === 0 ? 0.55 : 1,
+          }}
           onClick={() => router.push('/first-habit')}
-          whileTap={{ scale: 0.97 }}
-          className="w-full py-4 rounded-2xl font-semibold text-white"
-          style={{ background: 'var(--accent-blue)', opacity: selected.length === 0 ? 0.6 : 1 }}
         >
           Continue
-        </motion.button>
-      </motion.div>
+        </button>
+      </div>
     </div>
   )
 }

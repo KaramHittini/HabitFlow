@@ -1,45 +1,38 @@
 'use client'
 
-import { useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
 import { useAppStore } from '@/store/useAppStore'
 import { HabitPreviewCard } from '@/components/onboarding/HabitPreviewCard'
 
-const CONFETTI_COLORS = ['#4f8ef7', '#3ecf6b', '#f97316', '#a78bfa', '#f472b6', '#fbbf24', '#22d3ee', '#f87171']
-
-function Confetti() {
-  return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden z-50">
-      {Array.from({ length: 40 }).map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-2 h-2 rounded-sm"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: '-10px',
-            background: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-          }}
-          animate={{
-            y: ['0vh', '110vh'],
-            rotate: [0, Math.random() * 720 - 360],
-            opacity: [1, 0],
-          }}
-          transition={{
-            duration: 2 + Math.random() * 2,
-            delay: Math.random() * 1.5,
-            ease: 'easeIn',
-          }}
-        />
-      ))}
-    </div>
-  )
-}
+const CONFETTI = Array.from({ length: 50 }, (_, i) => ({
+  color: ['#4f8ef7','#3ecf6b','#f97316','#a78bfa','#f472b6','#fbbf24','#22d3ee'][i % 7],
+  left:  Math.random() * 100,
+  delay: Math.random() * 1.6,
+  dur:   2.2 + Math.random() * 1.8,
+  size:  4 + Math.random() * 6,
+  rot:   Math.random() * 360,
+}))
 
 export default function ReadyPage() {
   const router = useRouter()
   const { habits, setOnboardingDone } = useAppStore()
   const lastHabit = habits[habits.length - 1]
+  const heroRef   = useRef<HTMLDivElement>(null)
+
+  useGSAP(() => {
+    gsap.timeline()
+      .fromTo('.ready-emoji', { scale: 0.3, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.55, ease: 'back.out(2)' })
+      .fromTo('.ready-heading', { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.4, ease: 'power3.out' }, '-=0.2')
+      .fromTo('.ready-card', { y: 16, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.4, ease: 'power3.out' }, '-=0.15')
+      .fromTo('.ready-btn', { y: 12, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.35, ease: 'power3.out' }, '-=0.15')
+  }, [])
 
   const handleStart = () => {
     setOnboardingDone(true)
@@ -47,30 +40,33 @@ export default function ReadyPage() {
   }
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center px-6 text-center relative overflow-hidden"
-      style={{ background: 'var(--bg-base)' }}>
-      <Confetti />
+    <div
+      className="min-h-dvh flex flex-col items-center justify-center px-5 text-center relative overflow-hidden"
+      style={{ background: 'var(--bg-base)' }}
+    >
+      {/* confetti */}
+      {CONFETTI.map((c, i) => (
+        <div
+          key={i}
+          className="absolute rounded-sm pointer-events-none"
+          style={{
+            left:      `${c.left}%`,
+            top:       '-12px',
+            width:     c.size,
+            height:    c.size,
+            background: c.color,
+            transform: `rotate(${c.rot}deg)`,
+            animation: `confettiFall ${c.dur}s ${c.delay}s ease-in forwards`,
+          }}
+        />
+      ))}
 
-      <motion.div
-        className="relative z-10 flex flex-col items-center gap-6 max-w-sm w-full"
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, type: 'spring' }}
-      >
-        <motion.div
-          className="text-7xl"
-          animate={{ rotate: [0, 10, -10, 0] }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        >
-          🎉
-        </motion.div>
+      <div ref={heroRef} className="relative z-10 flex flex-col items-center gap-6 max-w-xs w-full">
+        <div className="ready-emoji text-7xl leading-none select-none">🎉</div>
 
-        <div>
-          <h1
-            className="text-4xl font-extrabold mb-2"
-            style={{ fontFamily: 'var(--font-bricolage)', color: 'var(--text-primary)' }}
-          >
-            You're all set!
+        <div className="ready-heading">
+          <h1 className="text-4xl font-extrabold font-display mb-2" style={{ color: 'var(--text-primary)' }}>
+            You&apos;re all set!
           </h1>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             Your first habit is ready to track
@@ -78,24 +74,22 @@ export default function ReadyPage() {
         </div>
 
         {lastHabit && (
-          <div className="w-full">
-            <HabitPreviewCard
-              name={lastHabit.name}
-              icon={lastHabit.icon}
-              color={lastHabit.color}
-            />
+          <div className="ready-card w-full">
+            <HabitPreviewCard name={lastHabit.name} icon={lastHabit.icon} color={lastHabit.color} />
           </div>
         )}
 
-        <motion.button
+        <button
           onClick={handleStart}
-          whileTap={{ scale: 0.97 }}
-          className="w-full py-4 rounded-2xl font-semibold text-white text-lg"
-          style={{ background: 'linear-gradient(135deg, #4f8ef7, #3ecf6b)' }}
+          className="ready-btn w-full py-4 rounded-2xl font-bold text-white text-base active:scale-[0.98] transition-transform"
+          style={{
+            background: 'linear-gradient(135deg, #4f8ef7, #3ecf6b)',
+            boxShadow: '0 8px 32px rgba(62,207,107,0.3)',
+          }}
         >
           Start Tracking
-        </motion.button>
-      </motion.div>
+        </button>
+      </div>
     </div>
   )
 }

@@ -9,20 +9,21 @@ interface ColorPickerProps {
 
 export function ColorPicker({ value, onChange }: ColorPickerProps) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2.5">
       {ACCENT_COLORS.map((color) => (
         <button
           key={color}
           type="button"
           onClick={() => onChange(color)}
-          className="w-7 h-7 rounded-full transition-transform hover:scale-110 focus:outline-none"
+          className="rounded-full transition-all duration-200 focus:outline-none"
           style={{
-            backgroundColor: color,
-            boxShadow:
-              value === color
-                ? `0 0 0 2px var(--bg-surface), 0 0 0 4px ${color}`
-                : 'none',
-            transform: value === color ? 'scale(1.15)' : undefined,
+            width:     28,
+            height:    28,
+            background: color,
+            boxShadow: value === color
+              ? `0 0 0 2px var(--bg-surface), 0 0 0 4px ${color}, 0 4px 12px ${color}66`
+              : '0 2px 6px rgba(0,0,0,0.25)',
+            transform: value === color ? 'scale(1.18)' : 'scale(1)',
           }}
           aria-label={color}
         />

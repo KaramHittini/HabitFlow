@@ -10,8 +10,8 @@ import type { Habit, HabitType, Frequency } from '@/types'
 import { createHabit } from '@/lib/habitUtils'
 import { useAppStore } from '@/store/useAppStore'
 
-const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-const DAY_VALUES = [1, 2, 3, 4, 5, 6, 0] // Mon=1…Sun=0
+const DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
+const DAY_VALUES = [1, 2, 3, 4, 5, 6, 0]
 
 interface HabitSheetProps {
   open: boolean
@@ -19,24 +19,38 @@ interface HabitSheetProps {
   editing?: Habit | null
 }
 
-function PreviewCard({ name, icon, color, type, goal, unit }: Partial<Habit>) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-5">
+      <label className="text-[10px] font-bold uppercase tracking-widest block mb-2" style={{ color: 'var(--text-muted)' }}>
+        {label}
+      </label>
+      {children}
+    </div>
+  )
+}
+
+function PreviewCard({ name, icon, color }: { name: string; icon: string; color: string }) {
   return (
     <div
-      className="rounded-2xl p-4 flex items-center gap-3 mb-5"
-      style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+      className="rounded-2xl p-4 flex items-center gap-3 mb-6"
+      style={{
+        background: 'var(--bg-elevated)',
+        border: `1px solid ${color}33`,
+        boxShadow: `0 0 24px ${color}18`,
+      }}
     >
-      <div
-        className="w-11 h-11 rounded-xl flex items-center justify-center text-xl"
-        style={{ background: (color ?? '#4f8ef7') + '22' }}
-      >
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+        style={{ background: color + '22' }}>
         {icon || '✨'}
       </div>
       <div>
         <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
           {name || 'Habit name'}
         </div>
-        <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-          {type === 'counter' && goal ? `0 / ${goal} ${unit ?? ''}` : type === 'timer' && goal ? `0 / ${Math.floor(goal / 60)} min` : 'Daily'}
+        <div className="flex items-center gap-1 mt-0.5">
+          <div className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
+          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Preview</span>
         </div>
       </div>
     </div>
@@ -46,170 +60,149 @@ function PreviewCard({ name, icon, color, type, goal, unit }: Partial<Habit>) {
 export function HabitSheet({ open, onClose, editing }: HabitSheetProps) {
   const { addHabit, updateHabit, habits } = useAppStore()
 
-  const [name, setName] = useState('')
-  const [icon, setIcon] = useState('✨')
-  const [color, setColor] = useState('#4f8ef7')
-  const [type, setType] = useState<HabitType>('check')
-  const [frequency, setFrequency] = useState<Frequency>('daily')
-  const [weekDays, setWeekDays] = useState<number[]>([1, 2, 3, 4, 5])
-  const [goal, setGoal] = useState<string>('')
-  const [unit, setUnit] = useState('')
-  const [reminder, setReminder] = useState('')
+  const [name,            setName]            = useState('')
+  const [icon,            setIcon]            = useState('✨')
+  const [color,           setColor]           = useState('#4f8ef7')
+  const [type,            setType]            = useState<HabitType>('check')
+  const [frequency,       setFrequency]       = useState<Frequency>('daily')
+  const [weekDays,        setWeekDays]        = useState<number[]>([1,2,3,4,5])
+  const [goal,            setGoal]            = useState('')
+  const [unit,            setUnit]            = useState('')
+  const [reminder,        setReminder]        = useState('')
   const [skipIfCompleted, setSkipIfCompleted] = useState(false)
 
   useEffect(() => {
     if (editing) {
-      setName(editing.name)
-      setIcon(editing.icon)
-      setColor(editing.color)
-      setType(editing.type)
-      setFrequency(editing.frequency)
-      setWeekDays(editing.weekDays ?? [1, 2, 3, 4, 5])
+      setName(editing.name); setIcon(editing.icon); setColor(editing.color)
+      setType(editing.type); setFrequency(editing.frequency)
+      setWeekDays(editing.weekDays ?? [1,2,3,4,5])
       setGoal(editing.goal ? String(editing.goal) : '')
-      setUnit(editing.unit ?? '')
-      setReminder(editing.reminder ?? '')
+      setUnit(editing.unit ?? ''); setReminder(editing.reminder ?? '')
       setSkipIfCompleted(editing.skipIfCompleted)
     } else {
       setName(''); setIcon('✨'); setColor('#4f8ef7'); setType('check')
-      setFrequency('daily'); setWeekDays([1, 2, 3, 4, 5]); setGoal('')
-      setUnit(''); setReminder(''); setSkipIfCompleted(false)
+      setFrequency('daily'); setWeekDays([1,2,3,4,5])
+      setGoal(''); setUnit(''); setReminder(''); setSkipIfCompleted(false)
     }
   }, [editing, open])
 
   const handleSave = () => {
     if (!name.trim()) return
     const goalNum = goal ? parseInt(goal) : undefined
-    if (editing) {
-      updateHabit(editing.id, { name: name.trim(), icon, color, type, frequency, weekDays, goal: goalNum, unit: unit || undefined, reminder: reminder || undefined, skipIfCompleted })
-    } else {
-      addHabit(createHabit({ name: name.trim(), icon, color, type, frequency, weekDays, goal: goalNum, unit: unit || undefined, reminder: reminder || undefined, skipIfCompleted, order: habits.length }))
+    const payload = {
+      name: name.trim(), icon, color, type, frequency, weekDays,
+      goal: goalNum, unit: unit || undefined,
+      reminder: reminder || undefined, skipIfCompleted,
     }
+    if (editing) updateHabit(editing.id, payload)
+    else addHabit(createHabit({ ...payload, order: habits.length }))
     onClose()
   }
 
-  const toggleWeekDay = (val: number) => {
-    setWeekDays((prev) =>
-      prev.includes(val) ? prev.filter((d) => d !== val) : [...prev, val]
-    )
-  }
+  const toggleWeekDay = (v: number) =>
+    setWeekDays((prev) => prev.includes(v) ? prev.filter((d) => d !== v) : [...prev, v])
+
+  const inputStyle = {
+    background: 'var(--bg-elevated)',
+    color: 'var(--text-primary)',
+    border: '1px solid var(--border)',
+    borderRadius: 'var(--radius-md)',
+    padding: '12px 16px',
+    fontSize: '14px',
+    width: '100%',
+  } as React.CSSProperties
 
   return (
     <Sheet open={open} onClose={onClose} title={editing ? 'Edit Habit' : 'New Habit'}>
-      <PreviewCard name={name} icon={icon} color={color} type={type} goal={goal ? parseInt(goal) : undefined} unit={unit} />
+      <PreviewCard name={name} icon={icon} color={color} />
 
-      {/* Name */}
-      <div className="mb-4">
-        <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>NAME</label>
+      <Field label="Name">
         <input
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Drink water"
-          className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none"
-          style={{ background: 'var(--bg-base)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+          style={inputStyle}
+          className="focus:outline-none"
         />
-      </div>
+      </Field>
 
-      {/* Icon */}
-      <div className="mb-4">
-        <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>ICON</label>
+      <Field label="Icon">
         <EmojiPicker value={icon} onChange={setIcon} />
-      </div>
+      </Field>
 
-      {/* Color */}
-      <div className="mb-4">
-        <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>COLOR</label>
+      <Field label="Color">
         <ColorPicker value={color} onChange={setColor} />
-      </div>
+      </Field>
 
-      {/* Type */}
-      <div className="mb-4">
-        <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>TYPE</label>
+      <Field label="Type">
         <SegmentedControl
           options={[
-            { label: '✓ Check', value: 'check' as HabitType },
-            { label: '+ Counter', value: 'counter' as HabitType },
-            { label: '⏱ Timer', value: 'timer' as HabitType },
+            { label: '✓  Check',   value: 'check'   as HabitType },
+            { label: '+  Counter', value: 'counter' as HabitType },
+            { label: '⏱  Timer',  value: 'timer'   as HabitType },
           ]}
           value={type}
           onChange={setType}
           className="w-full"
         />
-      </div>
+      </Field>
 
-      {/* Goal (conditional) */}
       {type === 'counter' && (
-        <div className="mb-4 flex gap-2">
+        <div className="flex gap-3 mb-5">
           <div className="flex-1">
-            <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>GOAL</label>
-            <input
-              type="number"
-              value={goal}
-              onChange={(e) => setGoal(e.target.value)}
-              placeholder="8"
-              className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none"
-              style={{ background: 'var(--bg-base)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
-            />
+            <label className="text-[10px] font-bold uppercase tracking-widest block mb-2" style={{ color: 'var(--text-muted)' }}>Goal</label>
+            <input type="number" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="8" style={inputStyle} className="focus:outline-none" />
           </div>
           <div className="flex-1">
-            <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>UNIT</label>
-            <input
-              value={unit}
-              onChange={(e) => setUnit(e.target.value)}
-              placeholder="glasses"
-              className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none"
-              style={{ background: 'var(--bg-base)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
-            />
+            <label className="text-[10px] font-bold uppercase tracking-widest block mb-2" style={{ color: 'var(--text-muted)' }}>Unit</label>
+            <input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="glasses" style={inputStyle} className="focus:outline-none" />
           </div>
         </div>
       )}
 
       {type === 'timer' && (
-        <div className="mb-4">
-          <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>GOAL (MINUTES)</label>
+        <Field label="Goal (minutes)">
           <input
             type="number"
             value={goal ? String(Math.floor(parseInt(goal) / 60)) : ''}
             onChange={(e) => setGoal(String(parseInt(e.target.value || '0') * 60))}
             placeholder="30"
-            className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none"
-            style={{ background: 'var(--bg-base)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+            style={inputStyle}
+            className="focus:outline-none"
           />
-        </div>
+        </Field>
       )}
 
-      {/* Frequency */}
-      <div className="mb-4">
-        <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>FREQUENCY</label>
+      <Field label="Frequency">
         <SegmentedControl
           options={[
-            { label: 'Daily', value: 'daily' as Frequency },
-            { label: 'Weekly', value: 'weekly' as Frequency },
+            { label: 'Daily',   value: 'daily'   as Frequency },
+            { label: 'Weekly',  value: 'weekly'  as Frequency },
             { label: 'Monthly', value: 'monthly' as Frequency },
           ]}
           value={frequency}
           onChange={setFrequency}
           className="w-full"
         />
-      </div>
+      </Field>
 
-      {/* Week days */}
       {frequency === 'weekly' && (
-        <div className="mb-4">
-          <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>DAYS</label>
+        <Field label="Days">
           <div className="flex gap-2">
             {DAYS.map((d, i) => {
               const val = DAY_VALUES[i]
-              const active = weekDays.includes(val)
+              const on  = weekDays.includes(val)
               return (
                 <button
                   key={i}
                   type="button"
                   onClick={() => toggleWeekDay(val)}
-                  className="w-9 h-9 rounded-full text-xs font-semibold transition-all"
+                  className="flex-1 h-9 rounded-xl text-xs font-bold transition-all"
                   style={{
-                    background: active ? color : 'var(--bg-base)',
-                    color: active ? 'white' : 'var(--text-secondary)',
+                    background: on ? color : 'var(--bg-elevated)',
+                    color:      on ? 'white' : 'var(--text-muted)',
+                    border:     `1px solid ${on ? color : 'var(--border)'}`,
                   }}
                 >
                   {d}
@@ -217,46 +210,45 @@ export function HabitSheet({ open, onClose, editing }: HabitSheetProps) {
               )
             })}
           </div>
-        </div>
+        </Field>
       )}
 
-      {/* Reminder */}
-      <div className="mb-4">
-        <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>REMINDER</label>
+      <Field label="Reminder">
         <input
           type="time"
           value={reminder}
           onChange={(e) => setReminder(e.target.value)}
-          className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none"
-          style={{ background: 'var(--bg-base)', color: 'var(--text-primary)', border: '1px solid var(--border)', colorScheme: 'dark' }}
+          style={{ ...inputStyle, colorScheme: 'dark' }}
+          className="focus:outline-none"
         />
-      </div>
+      </Field>
 
-      {/* Skip if completed */}
-      <div className="mb-6 flex items-center justify-between">
-        <span className="text-sm" style={{ color: 'var(--text-primary)' }}>Skip if completed</span>
+      <div className="flex items-center justify-between mb-7 px-0.5">
+        <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Skip if completed</span>
         <button
           type="button"
           onClick={() => setSkipIfCompleted((v) => !v)}
-          className="relative w-12 h-6 rounded-full transition-colors"
-          style={{ background: skipIfCompleted ? color : 'var(--bg-base)' }}
+          className="relative w-11 h-6 rounded-full transition-colors"
+          style={{ background: skipIfCompleted ? color : 'var(--bg-elevated)', border: '1px solid var(--border)' }}
         >
           <motion.div
-            className="absolute top-0.5 w-5 h-5 rounded-full bg-white"
-            animate={{ left: skipIfCompleted ? 26 : 2 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+            className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow"
+            animate={{ left: skipIfCompleted ? 22 : 2 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
           />
         </button>
       </div>
 
-      {/* Save */}
       <motion.button
         type="button"
         onClick={handleSave}
         disabled={!name.trim()}
         whileTap={{ scale: 0.97 }}
-        className="w-full py-4 rounded-2xl font-semibold text-white transition-opacity disabled:opacity-40"
-        style={{ background: color }}
+        className="w-full py-4 rounded-2xl font-bold text-white text-sm transition-opacity disabled:opacity-30"
+        style={{
+          background: `linear-gradient(135deg, ${color}, ${color}cc)`,
+          boxShadow: `0 8px 24px ${color}44`,
+        }}
       >
         {editing ? 'Save Changes' : 'Create Habit'}
       </motion.button>

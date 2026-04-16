@@ -1,8 +1,10 @@
 'use client'
 
 import { format } from 'date-fns'
-import { Plus, Settings } from 'lucide-react'
-import Link from 'next/link'
+import { Plus } from 'lucide-react'
+import { useRef } from 'react'
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
 
 interface TopBarProps {
   onAddHabit?: () => void
@@ -11,38 +13,60 @@ interface TopBarProps {
 }
 
 export function TopBar({ onAddHabit, title, showAdd = true }: TopBarProps) {
-  const dateLabel = title ?? `Today, ${format(new Date(), 'd MMM')}`
+  const day    = format(new Date(), 'EEEE')
+  const date   = format(new Date(), 'd MMM')
+  const label  = title ?? undefined
+  const barRef = useRef<HTMLElement>(null)
+
+  useGSAP(() => {
+    gsap.fromTo(
+      barRef.current,
+      { y: -20, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.45, ease: 'power3.out' }
+    )
+  }, [])
 
   return (
     <header
-      className="sticky top-0 z-20 flex items-center justify-between px-5 py-4"
-      style={{ background: 'var(--bg-base)', borderBottom: '1px solid var(--border)' }}
+      ref={barRef}
+      className="sticky top-0 z-20 flex items-center justify-between px-5 pt-5 pb-4"
+      style={{
+        background: 'var(--bg-base)',
+        borderBottom: '1px solid var(--border)',
+      }}
     >
-      <h1
-        className="text-xl font-bold"
-        style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-bricolage)' }}
-      >
-        {dateLabel}
-      </h1>
-
-      <div className="flex items-center gap-2">
-        {showAdd && (
-          <button
-            onClick={onAddHabit}
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-opacity hover:opacity-80"
-            style={{ background: 'var(--accent-blue)' }}
+      <div>
+        {label ? (
+          <h1
+            className="text-xl font-bold font-display"
+            style={{ color: 'var(--text-primary)' }}
           >
-            <Plus size={18} color="white" />
-          </button>
+            {label}
+          </h1>
+        ) : (
+          <>
+            <p className="text-xs font-medium uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-muted)' }}>
+              {day}
+            </p>
+            <h1 className="text-2xl font-bold font-display leading-none" style={{ color: 'var(--text-primary)' }}>
+              {date}
+            </h1>
+          </>
         )}
-        <Link
-          href="/settings"
-          className="w-9 h-9 rounded-full flex items-center justify-center transition-opacity hover:opacity-80"
-          style={{ background: 'var(--bg-card)' }}
-        >
-          <Settings size={18} style={{ color: 'var(--text-secondary)' }} />
-        </Link>
       </div>
+
+      {showAdd && (
+        <button
+          onClick={onAddHabit}
+          className="w-10 h-10 rounded-2xl flex items-center justify-center transition-all active:scale-95"
+          style={{
+            background: 'var(--accent-blue)',
+            boxShadow: '0 4px 16px rgba(79,142,247,0.35)',
+          }}
+        >
+          <Plus size={20} color="white" strokeWidth={2.5} />
+        </button>
+      )}
     </header>
   )
 }

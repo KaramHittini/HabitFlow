@@ -14,37 +14,34 @@ interface CounterButtonProps {
 }
 
 export function CounterButton({
-  value,
-  goal,
-  color,
-  onIncrement,
-  onDecrement,
-  size = 44,
+  value, goal, color, onIncrement, onDecrement, size = 40,
 }: CounterButtonProps) {
-  const percent = goal ? Math.min(100, (value / goal) * 100) : value > 0 ? 100 : 0
+  const percent = goal
+    ? Math.min(100, (value / goal) * 100)
+    : value > 0 ? 100 : 0
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1.5">
       {onDecrement && value > 0 && (
         <button
           onClick={onDecrement}
-          className="w-6 h-6 rounded-full flex items-center justify-center transition-opacity hover:opacity-70"
-          style={{ background: 'var(--bg-base)' }}
+          className="w-5 h-5 rounded-lg flex items-center justify-center transition-colors hover:bg-white/10"
+          style={{ background: 'var(--bg-elevated)' }}
         >
-          <Minus size={10} style={{ color: 'var(--text-secondary)' }} />
+          <Minus size={9} style={{ color: 'var(--text-muted)' }} />
         </button>
       )}
-      <button onClick={onIncrement} className="focus:outline-none">
+      <button onClick={onIncrement} className="focus:outline-none active:scale-95 transition-transform">
         <ProgressRing percent={percent} size={size} color={color}>
           <AnimatePresence mode="popLayout">
             <motion.span
               key={value}
-              className="text-xs font-bold"
+              className="text-[11px] font-bold"
               style={{ color: 'var(--text-primary)' }}
               initial={{ y: -8, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 8, opacity: 0 }}
-              transition={{ duration: 0.15 }}
+              transition={{ duration: 0.14 }}
             >
               {value}
             </motion.span>

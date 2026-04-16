@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { Flame, Check, MoreVertical } from 'lucide-react'
+import { Flame, Check, MoreHorizontal } from 'lucide-react'
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
 import type { Habit } from '@/types'
 import { useAppStore } from '@/store/useAppStore'
 import { todayStr, isHabitCompleted, calculateStreak } from '@/lib/dateUtils'
@@ -14,113 +16,132 @@ import { TimerButton } from './TimerButton'
 interface HabitCardProps {
   habit: Habit
   onEdit?: (habit: Habit) => void
+  index?: number
 }
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 12 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { type: 'spring' as const, stiffness: 300, damping: 24 },
-  },
-}
-
-export function HabitCard({ habit, onEdit }: HabitCardProps) {
-  const router = useRouter()
+export function HabitCard({ habit, onEdit, index = 0 }: HabitCardProps) {
+  const router  = useRouter()
   const { logs, logHabit, deleteHabit } = useAppStore()
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [completing, setCompleting] = useState(false)
+  const [menuOpen,    setMenuOpen]    = useState(false)
+  const [completing,  setCompleting]  = useState(false)
+  const cardRef  = useRef<HTMLDivElement>(null)
+  const checkRef = useRef<HTMLButtonElement>(null)
 
-  const today = todayStr()
-  const log = logs.find((l) => l.habitId === habit.id && l.date === today)
+  const today     = todayStr()
+  const log       = logs.find((l) => l.habitId === habit.id && l.date === today)
   const completed = isHabitCompleted(habit, logs, today)
-  const streak = calculateStreak(habit, logs)
+  const streak    = calculateStreak(habit, logs)
+
+  /* GSAP entrance */
+  useGSAP(() => {
+    gsap.fromTo(
+      cardRef.current,
+      { opacity: 0, y: 20, scale: 0.97 },
+      {
+        opacity: 1, y: 0, scale: 1,
+        duration: 0.45,
+        ease: 'power3.out',
+        delay: index * 0.06,
+      }
+    )
+  }, [])
 
   const handleCheck = async () => {
-    if (completing) return
+    if (completing || completed) return
     setCompleting(true)
+
+    /* GSAP check pulse */
+    gsap.timeline()
+      .to(checkRef.current, { scale: 1.25, duration: 0.12, ease: 'power2.out' })
+      .to(checkRef.current, { scale: 1,    duration: 0.2,  ease: 'elastic.out(1,0.5)' })
+
+    /* card flash */
+    gsap.to(cardRef.current, {
+      boxShadow: `0 0 28px ${habit.color}44`,
+      duration: 0.3,
+      yoyo: true,
+      repeat: 1,
+      ease: 'power2.out',
+    })
+
     logHabit(createLog(habit.id, 1))
-    await new Promise((r) => setTimeout(r, 300))
+    await new Promise((r) => setTimeout(r, 320))
     setCompleting(false)
   }
 
-  const handleIncrement = () => {
-    const current = log?.value ?? 0
-    logHabit(createLog(habit.id, current + 1))
-  }
-
-  const handleDecrement = () => {
-    const current = log?.value ?? 0
-    if (current > 0) logHabit(createLog(habit.id, current - 1))
-  }
-
-  const handleTimerSave = (seconds: number) => {
-    logHabit(createLog(habit.id, seconds))
-  }
+  const handleIncrement = () => logHabit(createLog(habit.id, (log?.value ?? 0) + 1))
+  const handleDecrement = () => { if ((log?.value ?? 0) > 0) logHabit(createLog(habit.id, (log?.value ?? 0) - 1)) }
+  const handleTimerSave = (s: number) => logHabit(createLog(habit.id, s))
 
   return (
-    <motion.div
-      variants={itemVariants}
-      className="relative rounded-2xl p-4 flex items-center gap-3 cursor-pointer select-none"
+    <div
+      ref={cardRef}
+      className="relative rounded-2xl flex items-center gap-3 cursor-pointer select-none group"
       style={{
         background: 'var(--bg-card)',
         border: '1px solid var(--border)',
-        opacity: completed ? 0.65 : 1,
+        padding: '14px 16px',
+        opacity: completed ? 0.6 : 1,
+        transition: 'opacity 0.3s ease, box-shadow 0.3s ease',
       }}
-      whileTap={{ scale: 0.99 }}
-      layout
     >
-      {/* Tap body → detail */}
+      {/* accent bar */}
       <div
-        className="flex items-center gap-3 flex-1 min-w-0"
+        className="absolute left-0 top-3 bottom-3 w-0.5 rounded-r-full"
+        style={{ background: habit.color, opacity: completed ? 0.5 : 0.8 }}
+      />
+
+      {/* tap body → detail */}
+      <div
+        className="flex items-center gap-3 flex-1 min-w-0 pl-2"
         onClick={() => router.push(`/habits/${habit.id}`)}
       >
-        {/* Icon */}
+        {/* icon bubble */}
         <div
-          className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0"
-          style={{ background: habit.color + '22' }}
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0"
+          style={{ background: habit.color + '1a' }}
         >
           {habit.icon}
         </div>
 
-        {/* Name + streak */}
+        {/* text */}
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
             <span
-              className="font-semibold text-sm truncate"
+              className="font-semibold text-sm leading-tight"
               style={{
                 color: 'var(--text-primary)',
                 textDecoration: completed ? 'line-through' : 'none',
+                opacity: completed ? 0.7 : 1,
               }}
             >
               {habit.name}
             </span>
             {streak >= 1 && (
-              <span className="text-xs flex items-center gap-0.5 shrink-0">
-                <Flame size={11} className="text-orange-400" />
-                <span style={{ color: 'var(--text-secondary)' }}>{streak}</span>
+              <span className="flex items-center gap-0.5 shrink-0">
+                <Flame size={10} style={{ color: '#f97316' }} />
+                <span className="text-[10px] font-bold" style={{ color: '#f97316' }}>{streak}</span>
               </span>
             )}
           </div>
-          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+          <span className="text-xs mt-0.5 block" style={{ color: 'var(--text-muted)' }}>
             {habit.frequency.charAt(0).toUpperCase() + habit.frequency.slice(1)}
-            {habit.goal && habit.type === 'counter' && ` · ${log?.value ?? 0}/${habit.goal} ${habit.unit ?? ''}`}
-            {habit.goal && habit.type === 'timer' && ` · ${Math.floor((log?.value ?? 0) / 60)}/${Math.floor(habit.goal / 60)} min`}
+            {habit.goal && habit.type === 'counter' && ` · ${log?.value ?? 0}/${habit.goal}${habit.unit ? ` ${habit.unit}` : ''}`}
+            {habit.goal && habit.type === 'timer'   && ` · ${Math.floor((log?.value ?? 0)/60)}/${Math.floor(habit.goal/60)} min`}
           </span>
         </div>
       </div>
 
-      {/* Action */}
+      {/* actions */}
       <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
         {habit.type === 'check' && (
-          <motion.button
+          <button
+            ref={checkRef}
             onClick={handleCheck}
-            animate={completing ? { scale: [1, 1.15, 1] } : {}}
-            transition={{ duration: 0.3 }}
-            className="w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all focus:outline-none"
+            className="w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors focus:outline-none"
             style={{
-              borderColor: completed ? habit.color : 'var(--border)',
-              background: completed ? habit.color : 'transparent',
+              borderColor: completed ? habit.color : 'var(--border-strong)',
+              background:  completed ? habit.color : 'transparent',
             }}
           >
             <AnimatePresence>
@@ -128,14 +149,14 @@ export function HabitCard({ habit, onEdit }: HabitCardProps) {
                 <motion.div
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0, opacity: 0 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                  exit={{ scale: 0 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 22 }}
                 >
-                  <Check size={14} color="white" strokeWidth={3} />
+                  <Check size={13} color="white" strokeWidth={3} />
                 </motion.div>
               )}
             </AnimatePresence>
-          </motion.button>
+          </button>
         )}
 
         {habit.type === 'counter' && (
@@ -157,35 +178,41 @@ export function HabitCard({ habit, onEdit }: HabitCardProps) {
           />
         )}
 
-        {/* 3-dot menu */}
+        {/* menu */}
         <div className="relative">
           <button
             onClick={() => setMenuOpen((v) => !v)}
-            className="w-7 h-7 rounded-full flex items-center justify-center transition-opacity hover:opacity-70 focus:outline-none"
+            className="w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity focus:outline-none"
+            style={{ background: 'var(--bg-surface)' }}
           >
-            <MoreVertical size={14} style={{ color: 'var(--text-secondary)' }} />
+            <MoreHorizontal size={13} style={{ color: 'var(--text-secondary)' }} />
           </button>
 
           <AnimatePresence>
             {menuOpen && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: -4 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: -4 }}
-                transition={{ duration: 0.12 }}
-                className="absolute right-0 top-8 rounded-xl shadow-xl z-10 py-1 min-w-32"
-                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                initial={{ opacity: 0, scale: 0.88, y: -6 }}
+                animate={{ opacity: 1, scale: 1,    y: 0 }}
+                exit={{ opacity: 0, scale: 0.88, y: -6 }}
+                transition={{ duration: 0.14 }}
+                className="absolute right-0 top-9 rounded-xl shadow-2xl z-10 overflow-hidden"
+                style={{
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border-strong)',
+                  minWidth: '120px',
+                }}
                 onMouseLeave={() => setMenuOpen(false)}
               >
                 <button
-                  className="w-full text-left px-4 py-2 text-sm hover:opacity-70 transition-opacity"
+                  className="w-full text-left px-4 py-2.5 text-xs font-medium hover:bg-white/5 transition-colors"
                   style={{ color: 'var(--text-primary)' }}
                   onClick={() => { setMenuOpen(false); onEdit?.(habit) }}
                 >
                   Edit
                 </button>
+                <div style={{ height: '1px', background: 'var(--border)' }} />
                 <button
-                  className="w-full text-left px-4 py-2 text-sm hover:opacity-70 transition-opacity"
+                  className="w-full text-left px-4 py-2.5 text-xs font-medium hover:bg-white/5 transition-colors"
                   style={{ color: 'var(--accent-red)' }}
                   onClick={() => { setMenuOpen(false); deleteHabit(habit.id) }}
                 >
@@ -196,6 +223,6 @@ export function HabitCard({ habit, onEdit }: HabitCardProps) {
           </AnimatePresence>
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
