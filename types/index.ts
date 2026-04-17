@@ -15,6 +15,8 @@ export interface Habit {
   skipIfCompleted: boolean
   createdAt: string         // ISO
   order: number
+  archived?: boolean
+  archivedAt?: string       // ISO
 }
 
 export interface HabitLog {
@@ -22,6 +24,7 @@ export interface HabitLog {
   date: string              // "YYYY-MM-DD"
   value: number             // 1 for check, count for counter, seconds for timer
   completedAt?: string      // ISO timestamp
+  note?: string
 }
 
 export interface AppState {

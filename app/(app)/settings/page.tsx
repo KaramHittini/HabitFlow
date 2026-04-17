@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, Download, Trash2, Info, Palette, CalendarDays } from 'lucide-react'
+import { Bell, Download, Upload, Trash2, Info, Palette, CalendarDays, RotateCcw } from 'lucide-react'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { useAppStore } from '@/store/useAppStore'
@@ -62,10 +62,14 @@ function SettingsRow({
 }
 
 export default function SettingsPage() {
-  const { habits, logs, clearAllData } = useAppStore()
-  const [notifStatus, setNotifStatus]  = useState<NotificationPermission | 'default'>('default')
-  const [confirmClear, setConfirmClear] = useState(false)
-  const [digestSent, setDigestSent]    = useState(false)
+  const { habits: allHabits, logs, clearAllData, unarchiveHabit, importData } = useAppStore()
+  const habits         = allHabits.filter((h) => !h.archived)
+  const archivedHabits = allHabits.filter((h) => h.archived)
+  const [notifStatus,   setNotifStatus]   = useState<NotificationPermission | 'default'>('default')
+  const [confirmClear,  setConfirmClear]  = useState(false)
+  const [digestSent,    setDigestSent]    = useState(false)
+  const [pendingImport, setPendingImport] = useState<{ habits: unknown[]; logs: unknown[] } | null>(null)
+  const importRef = useRef<HTMLInputElement>(null)
 
   const sendWeeklyDigest = async () => {
     if (!('Notification' in window)) return
@@ -79,6 +83,29 @@ export default function SettingsPage() {
     setDigestSent(true)
     setTimeout(() => setDigestSent(false), 3000)
   }
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target?.result as string)
+        if (Array.isArray(data.habits) && Array.isArray(data.logs)) {
+          setPendingImport(data)
+        }
+      } catch { /* invalid file */ }
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }
+
+  const confirmImport = (mode: 'replace' | 'merge') => {
+    if (!pendingImport) return
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    importData(pendingImport.habits as any, pendingImport.logs as any, mode)
+    setPendingImport(null)
+  }
+
   const headerRef = useRef<HTMLDivElement>(null)
 
   useGSAP(() => {
@@ -183,8 +210,17 @@ export default function SettingsPage() {
               iconColor="var(--accent-green)"
               title="Export data"
               subtitle="Download a JSON backup"
-              onClick={() => exportData(habits, logs)}
+              onClick={() => exportData(allHabits, logs)}
             />
+            <div style={{ height: '1px', background: 'var(--border)' }} />
+            <SettingsRow
+              icon={<Upload size={16} style={{ color: 'var(--accent-blue)' }} />}
+              iconColor="var(--accent-blue)"
+              title="Import data"
+              subtitle="Restore from a JSON backup"
+              onClick={() => importRef.current?.click()}
+            />
+            <input ref={importRef} type="file" accept=".json" className="hidden" onChange={handleImportFile} />
             <div style={{ height: '1px', background: 'var(--border)' }} />
             <SettingsRow
               icon={<Trash2 size={16} style={{ color: 'var(--accent-red)' }} />}
@@ -196,6 +232,38 @@ export default function SettingsPage() {
             />
           </div>
         </div>
+
+        {/* Archived */}
+        {archivedHabits.length > 0 && (
+          <div className="settings-section">
+            <SectionLabel>Archived ({archivedHabits.length})</SectionLabel>
+            <div className="rounded-2xl overflow-hidden flex flex-col" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              {archivedHabits.map((habit, i) => (
+                <div key={habit.id}>
+                  {i > 0 && <div style={{ height: '1px', background: 'var(--border)' }} />}
+                  <div className="flex items-center gap-3 px-4 py-3">
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0"
+                      style={{ background: habit.color + '1a' }}>
+                      {habit.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{habit.name}</p>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Archived</p>
+                    </div>
+                    <button
+                      onClick={() => unarchiveHabit(habit.id)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0"
+                      style={{ background: 'rgba(79,142,247,0.12)', color: 'var(--accent-blue)' }}
+                    >
+                      <RotateCcw size={11} />
+                      Restore
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* About */}
         <div className="settings-section">
@@ -211,7 +279,66 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Confirm dialog */}
+      {/* Import confirm dialog */}
+      <AnimatePresence>
+        {pendingImport && (
+          <>
+            <motion.div
+              className="fixed inset-0 z-40"
+              style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setPendingImport(null)}
+            />
+            <motion.div
+              className="fixed z-50 rounded-3xl p-6"
+              style={{
+                left: '50%', top: '50%', transform: 'translate(-50%,-50%)',
+                width: 'calc(100% - 40px)', maxWidth: '390px',
+                background: 'var(--bg-elevated)', border: '1px solid var(--border-strong)',
+                boxShadow: '0 24px 80px rgba(0,0,0,0.4)',
+              }}
+              initial={{ opacity: 0, scale: 0.88 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.88 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+            >
+              <div className="text-3xl mb-3">📥</div>
+              <h2 className="text-lg font-bold font-display mb-2" style={{ color: 'var(--text-primary)' }}>
+                Import data
+              </h2>
+              <p className="text-sm mb-6 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                Found {(pendingImport.habits as unknown[]).length} habits and {(pendingImport.logs as unknown[]).length} logs.
+                How would you like to import?
+              </p>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => confirmImport('merge')}
+                  className="w-full py-3 rounded-xl font-semibold text-sm"
+                  style={{ background: 'var(--accent-blue)', color: '#fff' }}
+                >
+                  Merge with existing
+                </button>
+                <button
+                  onClick={() => confirmImport('replace')}
+                  className="w-full py-3 rounded-xl font-semibold text-sm"
+                  style={{ background: 'rgba(248,113,113,0.12)', color: 'var(--accent-red)' }}
+                >
+                  Replace all data
+                </button>
+                <button
+                  onClick={() => setPendingImport(null)}
+                  className="w-full py-3 rounded-xl font-semibold text-sm"
+                  style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Confirm clear dialog */}
       <AnimatePresence>
         {confirmClear && (
           <>

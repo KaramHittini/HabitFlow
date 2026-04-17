@@ -16,7 +16,8 @@ const TABS = [
 
 export function Sidebar() {
   const pathname  = usePathname()
-  const { habits, logs } = useAppStore()
+  const { habits: allHabits, logs } = useAppStore()
+  const habits    = allHabits.filter((h) => !h.archived)
   const today     = new Date()
   const dueToday  = habits.filter((h) => isHabitDueOnDate(h, today))
   const doneToday = dueToday.filter((h) => isHabitCompleted(h, logs, todayStr())).length

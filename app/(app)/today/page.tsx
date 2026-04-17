@@ -54,7 +54,8 @@ function AnimatedDonut({ pct }: { pct: number }) {
 }
 
 export default function TodayPage() {
-  const { habits, reorderHabits, logs } = useAppStore()
+  const { habits: allHabits, reorderHabits, logs } = useAppStore()
+  const habits = allHabits.filter((h) => !h.archived)
   const [sheetOpen,    setSheetOpen]    = useState(false)
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null)
   const summaryRef = useRef<HTMLDivElement>(null)

@@ -193,6 +193,28 @@ export function HabitDetail({ habit }: HabitDetailProps) {
           </p>
           <HabitHeatmap habit={habit} logs={logs} />
         </div>
+
+        {/* recent reflections */}
+        {(() => {
+          const notedLogs = logs
+            .filter((l) => l.habitId === habit.id && l.note)
+            .sort((a, b) => b.date.localeCompare(a.date))
+            .slice(0, 10)
+          if (notedLogs.length === 0) return null
+          return (
+            <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                Reflections
+              </p>
+              {notedLogs.map((l) => (
+                <div key={l.date} className="flex flex-col gap-0.5">
+                  <span className="text-[10px] font-semibold" style={{ color: 'var(--text-muted)' }}>{l.date}</span>
+                  <p className="text-sm leading-snug" style={{ color: 'var(--text-primary)' }}>{l.note}</p>
+                </div>
+              ))}
+            </div>
+          )
+        })()}
       </div>
 
       <HabitSheet open={editOpen} onClose={() => setEditOpen(false)} editing={habit} />

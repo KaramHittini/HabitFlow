@@ -8,17 +8,28 @@ import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { useAppStore } from '@/store/useAppStore'
 import { WeekGrid } from '@/components/calendar/WeekGrid'
-import { weekDays } from '@/lib/dateUtils'
+import { weekDays, isHabitDueOnDate, isHabitCompleted, format as formatDate } from '@/lib/dateUtils'
 import { EmptyState } from '@/components/ui/EmptyState'
 
 export default function WeekPage() {
-  const { habits, logs }     = useAppStore()
+  const { habits: allHabits, logs } = useAppStore()
+  const habits = allHabits.filter((h) => !h.archived)
   const [weekStart, setWeekStart] = useState(new Date())
   const [direction, setDirection] = useState(0)
   const headerRef = useRef<HTMLDivElement>(null)
 
   const days       = weekDays(weekStart)
   const rangeLabel = `${format(days[0], 'MMM d')} – ${format(days[6], 'MMM d, yyyy')}`
+
+  // Week summary stats (desktop panel)
+  const weekStats = habits.map((habit) => {
+    const due  = days.filter((d) => isHabitDueOnDate(habit, d)).length
+    const done = days.filter((d) => isHabitCompleted(habit, logs, formatDate(d, 'yyyy-MM-dd'))).length
+    return { habit, due, done, pct: due > 0 ? Math.round((done / due) * 100) : 0 }
+  })
+  const totalDue  = weekStats.reduce((s, r) => s + r.due,  0)
+  const totalDone = weekStats.reduce((s, r) => s + r.done, 0)
+  const weekPct   = totalDue > 0 ? Math.round((totalDone / totalDue) * 100) : 0
 
   useGSAP(() => {
     gsap.fromTo(headerRef.current, { y: -16, opacity: 0 },
@@ -59,7 +70,8 @@ export default function WeekPage() {
         </div>
       </div>
 
-      <div className="px-5 py-5">
+      <div className="px-5 py-5 md:grid md:grid-cols-[1fr_260px] md:gap-5 md:items-start">
+        {/* Calendar column */}
         <AnimatePresence mode="wait">
           <motion.div
             key={weekStart.toISOString()}
@@ -80,6 +92,81 @@ export default function WeekPage() {
             )}
           </motion.div>
         </AnimatePresence>
+
+        {/* Summary panel — desktop only */}
+        {habits.length > 0 && (
+          <div className="hidden md:flex flex-col gap-3">
+            {/* Week score */}
+            <div
+              className="rounded-2xl p-4"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+            >
+              <p className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>
+                Week score
+              </p>
+              <div className="flex items-end gap-2 mb-3">
+                <span className="text-3xl font-bold font-display" style={{ color: 'var(--text-primary)' }}>
+                  {weekPct}%
+                </span>
+                <span className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
+                  {totalDone}/{totalDue} done
+                </span>
+              </div>
+              {/* progress bar */}
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${weekPct}%`,
+                    background: weekPct === 100
+                      ? 'var(--accent-green)'
+                      : weekPct >= 50
+                      ? 'var(--accent-blue)'
+                      : 'var(--accent-orange)',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Per-habit breakdown */}
+            <div
+              className="rounded-2xl overflow-hidden"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+            >
+              <p className="text-[10px] font-bold uppercase tracking-wider px-4 pt-4 pb-2" style={{ color: 'var(--text-muted)' }}>
+                Habits
+              </p>
+              {weekStats.map(({ habit, done, due, pct }, i) => (
+                <div key={habit.id}>
+                  {i > 0 && <div style={{ height: '1px', background: 'var(--border)' }} />}
+                  <div className="flex items-center gap-2.5 px-4 py-2.5">
+                    <span className="text-base shrink-0">{habit.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+                        {habit.name}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
+                          <div
+                            className="h-full rounded-full"
+                            style={{
+                              width: `${pct}%`,
+                              background: pct === 100 ? 'var(--accent-green)' : habit.color,
+                              transition: 'width 0.4s ease',
+                            }}
+                          />
+                        </div>
+                        <span className="text-[10px] font-bold shrink-0" style={{ color: 'var(--text-muted)' }}>
+                          {done}/{due}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

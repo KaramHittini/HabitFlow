@@ -32,7 +32,8 @@ function getDaysForRange(range: Range, habit: Habit) {
 }
 
 export default function StatsPage() {
-  const { habits, logs }  = useAppStore()
+  const { habits: allHabits, logs } = useAppStore()
+  const habits = allHabits.filter((h) => !h.archived)
   const [range, setRange] = useState<Range>('7d')
   const [expanded, setExpanded] = useState<string | null>(null)
   const headerRef = useRef<HTMLDivElement>(null)
@@ -70,35 +71,38 @@ export default function StatsPage() {
       </div>
 
       <div className="px-5 py-5 flex flex-col gap-3">
-        {/* Today overview */}
-        <div
-          className="stat-card rounded-2xl p-5 flex items-center gap-5"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-        >
-          <ProgressRing
-            percent={todayPct}
-            size={60}
-            strokeWidth={5}
-            color="var(--accent-green)"
+        {/* Top row — 2-col on desktop */}
+        <div className="md:grid md:grid-cols-2 md:gap-3 flex flex-col gap-3">
+          {/* Today overview */}
+          <div
+            className="stat-card rounded-2xl p-5 flex items-center gap-5"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
           >
-            <span className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>
-              {Math.round(todayPct)}%
-            </span>
-          </ProgressRing>
-          <div>
-            <p className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>Today</p>
-            <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
-              {doneTodayCount} of {habits.length} habits completed
-            </p>
+            <ProgressRing
+              percent={todayPct}
+              size={60}
+              strokeWidth={5}
+              color="var(--accent-green)"
+            >
+              <span className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>
+                {Math.round(todayPct)}%
+              </span>
+            </ProgressRing>
+            <div>
+              <p className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>Today</p>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                {doneTodayCount} of {habits.length} habits completed
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* Weekly digest */}
-        {habits.length > 0 && (
-          <div className="stat-card">
-            <WeeklyDigest habits={habits} logs={logs} />
-          </div>
-        )}
+          {/* Weekly digest */}
+          {habits.length > 0 && (
+            <div className="stat-card">
+              <WeeklyDigest habits={habits} logs={logs} />
+            </div>
+          )}
+        </div>
 
         {habits.length === 0 && (
           <EmptyState
@@ -109,7 +113,8 @@ export default function StatsPage() {
           />
         )}
 
-        {/* Per-habit */}
+        {/* Per-habit — 2-col grid on desktop */}
+        <div className="md:grid md:grid-cols-2 md:gap-3 flex flex-col gap-3">
         {habits.map((habit) => {
           const open   = expanded === habit.id
           const days   = getDaysForRange(range, habit)
@@ -192,6 +197,7 @@ export default function StatsPage() {
             </div>
           )
         })}
+        </div>
       </div>
     </div>
   )

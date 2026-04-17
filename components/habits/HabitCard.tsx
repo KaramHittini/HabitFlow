@@ -25,13 +25,15 @@ const MILESTONES = [3, 7, 14, 21, 30, 60, 100, 200, 365]
 
 export function HabitCard({ habit, onEdit, index = 0 }: HabitCardProps) {
   const router  = useRouter()
-  const { logs, logHabit, deleteHabit, addHabit } = useAppStore()
+  const { logs, logHabit, deleteHabit, archiveHabit, addHabit, setLogNote } = useAppStore()
   const { push } = useToastStore()
   const { show: showCelebration } = useCelebrationStore()
   const [menuOpen,   setMenuOpen]   = useState(false)
   const [completing, setCompleting] = useState(false)
   const [swipeX,     setSwipeX]     = useState(0)
   const [snapping,   setSnapping]   = useState(false)
+  const [noteOpen,   setNoteOpen]   = useState(false)
+  const [noteText,   setNoteText]   = useState('')
   const cardRef  = useRef<HTMLDivElement>(null)
   const checkRef = useRef<HTMLButtonElement>(null)
   const touchRef = useRef({ startX: 0, startY: 0, active: false, committed: false })
@@ -74,6 +76,13 @@ export function HabitCard({ habit, onEdit, index = 0 }: HabitCardProps) {
     }
 
     setCompleting(false)
+    if (habit.type === 'check') setNoteOpen(true)
+  }
+
+  const handleSaveNote = () => {
+    if (noteText.trim()) setLogNote(habit.id, today, noteText.trim())
+    setNoteOpen(false)
+    setNoteText('')
   }
 
   const handleDeleteWithUndo = () => {
@@ -88,6 +97,12 @@ export function HabitCard({ habit, onEdit, index = 0 }: HabitCardProps) {
         savedLogs.forEach((l) => logHabit(l))
       },
     })
+  }
+
+  const handleArchive = () => {
+    setMenuOpen(false)
+    archiveHabit(habit.id)
+    push({ message: `"${habit.name}" archived` })
   }
 
   const handleIncrement = () => logHabit(createLog(habit.id, (log?.value ?? 0) + 1))
@@ -123,6 +138,7 @@ export function HabitCard({ habit, onEdit, index = 0 }: HabitCardProps) {
   }
 
   return (
+    <div className="flex flex-col gap-1">
     <div className="relative rounded-2xl overflow-hidden">
       {/* Swipe reveal */}
       <div
@@ -232,6 +248,14 @@ export function HabitCard({ habit, onEdit, index = 0 }: HabitCardProps) {
                   <div style={{ height: '1px', background: 'var(--border)' }} />
                   <button
                     className="w-full text-left px-4 py-2.5 text-xs font-medium hover:bg-white/5 transition-colors"
+                    style={{ color: 'var(--text-muted)' }}
+                    onClick={handleArchive}
+                  >
+                    Archive
+                  </button>
+                  <div style={{ height: '1px', background: 'var(--border)' }} />
+                  <button
+                    className="w-full text-left px-4 py-2.5 text-xs font-medium hover:bg-white/5 transition-colors"
                     style={{ color: 'var(--accent-red)' }}
                     onClick={handleDeleteWithUndo}
                   >
@@ -288,6 +312,41 @@ export function HabitCard({ habit, onEdit, index = 0 }: HabitCardProps) {
           )}
         </div>
       </div>
+    </div>
+
+      <AnimatePresence>
+        {noteOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+            >
+              <input
+                autoFocus
+                placeholder="Add a reflection… (optional)"
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSaveNote()}
+                className="flex-1 bg-transparent text-xs outline-none"
+                style={{ color: 'var(--text-primary)' }}
+              />
+              <button
+                onClick={handleSaveNote}
+                className="text-xs font-bold shrink-0"
+                style={{ color: 'var(--accent-blue)' }}
+              >
+                {noteText.trim() ? 'Save' : 'Skip'}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
