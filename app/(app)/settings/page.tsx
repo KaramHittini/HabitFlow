@@ -2,12 +2,13 @@
 
 import { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, Download, Trash2, Info, Palette } from 'lucide-react'
+import { Bell, Download, Trash2, Info, Palette, CalendarDays } from 'lucide-react'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { useAppStore } from '@/store/useAppStore'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { exportData } from '@/lib/habitUtils'
+import { getWeekDigest, buildDigestNotification } from '@/lib/insights'
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -64,6 +65,20 @@ export default function SettingsPage() {
   const { habits, logs, clearAllData } = useAppStore()
   const [notifStatus, setNotifStatus]  = useState<NotificationPermission | 'default'>('default')
   const [confirmClear, setConfirmClear] = useState(false)
+  const [digestSent, setDigestSent]    = useState(false)
+
+  const sendWeeklyDigest = async () => {
+    if (!('Notification' in window)) return
+    let perm = Notification.permission
+    if (perm === 'default') perm = await Notification.requestPermission()
+    if (perm !== 'granted') { setNotifStatus('denied'); return }
+    setNotifStatus('granted')
+    const digest = getWeekDigest(habits, logs)
+    const { title, body } = buildDigestNotification(digest)
+    new Notification(title, { body, icon: '/favicon.ico' })
+    setDigestSent(true)
+    setTimeout(() => setDigestSent(false), 3000)
+  }
   const headerRef = useRef<HTMLDivElement>(null)
 
   useGSAP(() => {
@@ -110,7 +125,7 @@ export default function SettingsPage() {
         {/* Notifications */}
         <div className="settings-section">
           <SectionLabel>Notifications</SectionLabel>
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <div className="rounded-2xl overflow-hidden divide-y" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderColor: 'var(--border)' } as React.CSSProperties}>
             <SettingsRow
               icon={<Bell size={16} style={{ color: 'var(--accent-blue)' }} />}
               iconColor="var(--accent-blue)"
@@ -134,6 +149,26 @@ export default function SettingsPage() {
                     Enable
                   </button>
                 ) : null
+              }
+            />
+            <div style={{ height: '1px', background: 'var(--border)' }} />
+            <SettingsRow
+              icon={<CalendarDays size={16} style={{ color: 'var(--accent-purple)' }} />}
+              iconColor="var(--accent-purple)"
+              title="Weekly digest"
+              subtitle="Send this week's summary as a notification"
+              right={
+                <button
+                  onClick={sendWeeklyDigest}
+                  className="text-xs font-bold px-3 py-1.5 rounded-xl"
+                  style={{
+                    background: digestSent ? 'rgba(62,207,107,0.15)' : 'rgba(167,139,250,0.15)',
+                    color:      digestSent ? 'var(--accent-green)'   : 'var(--accent-purple)',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {digestSent ? '✓ Sent' : 'Send'}
+                </button>
               }
             />
           </div>

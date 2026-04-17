@@ -14,6 +14,7 @@ import {
   calculateStreak, calculateBestStreak, getTotalCompletions,
 } from '@/lib/dateUtils'
 import { subDays, format } from 'date-fns'
+import { WeeklyDigest } from '@/components/insights/WeeklyDigest'
 import type { Habit } from '@/types'
 
 type Range = '7d' | '30d' | 'all'
@@ -90,6 +91,13 @@ export default function StatsPage() {
             </p>
           </div>
         </div>
+
+        {/* Weekly digest */}
+        {habits.length > 0 && (
+          <div className="stat-card">
+            <WeeklyDigest habits={habits} logs={logs} />
+          </div>
+        )}
 
         {habits.length === 0 && (
           <div className="flex flex-col items-center py-20 gap-3">

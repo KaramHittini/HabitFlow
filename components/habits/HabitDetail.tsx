@@ -15,6 +15,7 @@ import {
 import { MonthCalendar } from '@/components/calendar/MonthCalendar'
 import { HabitBarChart } from '@/components/charts/HabitBarChart'
 import { HabitHeatmap } from '@/components/charts/HabitHeatmap'
+import { TimeInsightCard } from '@/components/insights/TimeInsightCard'
 import { HabitSheet } from './HabitSheet'
 
 interface HabitDetailProps { habit: Habit }
@@ -173,6 +174,9 @@ export function HabitDetail({ habit }: HabitDetailProps) {
           </div>
           <MonthCalendar habit={habit} logs={logs} month={month} />
         </div>
+
+        {/* time of day insight */}
+        <TimeInsightCard habit={habit} logs={logs} />
 
         {/* bar chart */}
         <div className="rounded-2xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
