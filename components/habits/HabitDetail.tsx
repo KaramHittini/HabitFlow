@@ -14,6 +14,7 @@ import {
 } from '@/lib/dateUtils'
 import { MonthCalendar } from '@/components/calendar/MonthCalendar'
 import { HabitBarChart } from '@/components/charts/HabitBarChart'
+import { HabitHeatmap } from '@/components/charts/HabitHeatmap'
 import { HabitSheet } from './HabitSheet'
 
 interface HabitDetailProps { habit: Habit }
@@ -179,6 +180,14 @@ export function HabitDetail({ habit }: HabitDetailProps) {
             Last 7 days
           </p>
           <HabitBarChart habit={habit} logs={logs} days={last7} />
+        </div>
+
+        {/* contribution heatmap */}
+        <div className="rounded-2xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>
+            Year overview
+          </p>
+          <HabitHeatmap habit={habit} logs={logs} />
         </div>
       </div>
 

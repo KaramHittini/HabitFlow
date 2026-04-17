@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { CheckSquare, Calendar, BarChart2, Settings } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useAppStore } from '@/store/useAppStore'
+import { todayStr, isHabitDueOnDate, isHabitCompleted } from '@/lib/dateUtils'
 
 const TABS = [
   { href: '/today',    icon: CheckSquare, label: 'Today'    },
@@ -13,7 +15,11 @@ const TABS = [
 ]
 
 export function Sidebar() {
-  const pathname = usePathname()
+  const pathname  = usePathname()
+  const { habits, logs } = useAppStore()
+  const today     = new Date()
+  const dueToday  = habits.filter((h) => isHabitDueOnDate(h, today))
+  const doneToday = dueToday.filter((h) => isHabitCompleted(h, logs, todayStr())).length
 
   return (
     <aside
@@ -65,11 +71,26 @@ export function Sidebar() {
                 style={{ color: active ? 'var(--accent-blue)' : 'var(--text-muted)', flexShrink: 0 }}
               />
               <span
-                className="text-sm font-semibold relative"
+                className="text-sm font-semibold relative flex-1"
                 style={{ color: active ? 'var(--accent-blue)' : 'var(--text-secondary)' }}
               >
                 {label}
               </span>
+              {href === '/today' && dueToday.length > 0 && (
+                <span
+                  className="text-[10px] font-bold px-1.5 py-0.5 rounded-full relative"
+                  style={{
+                    background: doneToday === dueToday.length
+                      ? 'rgba(62,207,107,0.15)'
+                      : 'rgba(79,142,247,0.12)',
+                    color: doneToday === dueToday.length
+                      ? 'var(--accent-green)'
+                      : 'var(--accent-blue)',
+                  }}
+                >
+                  {doneToday}/{dueToday.length}
+                </span>
+              )}
             </Link>
           )
         })}
