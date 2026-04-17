@@ -13,6 +13,19 @@ import { useAppStore } from '@/store/useAppStore'
 const DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 const DAY_VALUES = [1, 2, 3, 4, 5, 6, 0]
 
+/** Returns dark or light text color for readability on a given hex background */
+function getTextOnColor(hex: string): string {
+  try {
+    const r = parseInt(hex.slice(1, 3), 16)
+    const g = parseInt(hex.slice(3, 5), 16)
+    const b = parseInt(hex.slice(5, 7), 16)
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+    return luminance > 0.5 ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.95)'
+  } catch {
+    return 'rgba(255,255,255,0.95)'
+  }
+}
+
 interface HabitSheetProps {
   open: boolean
   onClose: () => void
@@ -33,7 +46,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function PreviewCard({ name, icon, color }: { name: string; icon: string; color: string }) {
   return (
     <div
-      className="rounded-2xl p-4 flex items-center gap-3 mb-6"
+      className="rounded-2xl p-4 flex items-center gap-3 mb-4"
       style={{
         background: 'var(--bg-elevated)',
         border: `1px solid ${color}33`,
@@ -112,6 +125,8 @@ export function HabitSheet({ open, onClose, editing }: HabitSheetProps) {
     width: '100%',
   } as React.CSSProperties
 
+  const saveTextColor = getTextOnColor(color)
+
   return (
     <Sheet open={open} onClose={onClose} title={editing ? 'Edit Habit' : 'New Habit'}>
       <PreviewCard name={name} icon={icon} color={color} />
@@ -149,13 +164,13 @@ export function HabitSheet({ open, onClose, editing }: HabitSheetProps) {
       </Field>
 
       {type === 'counter' && (
-        <div className="flex gap-3 mb-5">
+        <div className="flex gap-3 mb-4">
           <div className="flex-1">
-            <label className="text-[10px] font-bold uppercase tracking-widest block mb-2" style={{ color: 'var(--text-muted)' }}>Goal</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: 'var(--text-muted)' }}>Goal</label>
             <input type="number" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="8" style={inputStyle} className="focus:outline-none" />
           </div>
           <div className="flex-1">
-            <label className="text-[10px] font-bold uppercase tracking-widest block mb-2" style={{ color: 'var(--text-muted)' }}>Unit</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: 'var(--text-muted)' }}>Unit</label>
             <input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="glasses" style={inputStyle} className="focus:outline-none" />
           </div>
         </div>
@@ -189,7 +204,7 @@ export function HabitSheet({ open, onClose, editing }: HabitSheetProps) {
 
       {frequency === 'weekly' && (
         <Field label="Days">
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             {DAYS.map((d, i) => {
               const val = DAY_VALUES[i]
               const on  = weekDays.includes(val)
@@ -200,9 +215,9 @@ export function HabitSheet({ open, onClose, editing }: HabitSheetProps) {
                   onClick={() => toggleWeekDay(val)}
                   className="flex-1 h-9 rounded-xl text-xs font-bold transition-all"
                   style={{
-                    background: on ? color : 'var(--bg-elevated)',
-                    color:      on ? 'white' : 'var(--text-muted)',
-                    border:     `1px solid ${on ? color : 'var(--border)'}`,
+                    background: on ? color + '28' : 'var(--bg-elevated)',
+                    color:      on ? color        : 'var(--text-muted)',
+                    border:     `1.5px solid ${on ? color : 'var(--border)'}`,
                   }}
                 >
                   {d}
@@ -223,13 +238,16 @@ export function HabitSheet({ open, onClose, editing }: HabitSheetProps) {
         />
       </Field>
 
-      <div className="flex items-center justify-between mb-7 px-0.5">
+      <div className="flex items-center justify-between mb-6 px-0.5">
         <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Skip if completed</span>
         <button
           type="button"
           onClick={() => setSkipIfCompleted((v) => !v)}
           className="relative w-11 h-6 rounded-full transition-colors"
-          style={{ background: skipIfCompleted ? color : 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+          style={{
+            background: skipIfCompleted ? 'var(--accent-blue)' : 'var(--bg-elevated)',
+            border: '1px solid var(--border)',
+          }}
         >
           <motion.div
             className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow"
@@ -244,10 +262,11 @@ export function HabitSheet({ open, onClose, editing }: HabitSheetProps) {
         onClick={handleSave}
         disabled={!name.trim()}
         whileTap={{ scale: 0.97 }}
-        className="w-full py-4 rounded-2xl font-bold text-white text-sm transition-opacity disabled:opacity-30"
+        className="w-full py-4 rounded-2xl font-bold text-sm transition-opacity disabled:opacity-30"
         style={{
           background: `linear-gradient(135deg, ${color}, ${color}cc)`,
           boxShadow: `0 8px 24px ${color}44`,
+          color: saveTextColor,
         }}
       >
         {editing ? 'Save Changes' : 'Create Habit'}

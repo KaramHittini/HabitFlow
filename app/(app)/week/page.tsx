@@ -34,7 +34,7 @@ export default function WeekPage() {
         className="sticky top-0 z-20 px-5 pt-5 pb-4"
         style={{ background: 'var(--bg-base)', borderBottom: '1px solid var(--border)' }}
       >
-        <h1 className="text-2xl font-bold font-display mb-4" style={{ color: 'var(--text-primary)' }}>
+        <h1 className="text-2xl font-bold font-display text-center mb-4" style={{ color: 'var(--text-primary)' }}>
           Week
         </h1>
         <div className="flex items-center justify-between">
@@ -78,12 +78,7 @@ export default function WeekPage() {
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Add habits to see your week</p>
               </div>
             ) : (
-              <div
-                className="rounded-2xl p-4"
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-              >
-                <WeekGrid habits={habits} logs={logs} days={days} />
-              </div>
+              <WeekGrid habits={habits} logs={logs} days={days} />
             )}
           </motion.div>
         </AnimatePresence>

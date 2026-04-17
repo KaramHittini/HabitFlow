@@ -32,7 +32,7 @@ export function BottomNav() {
   return (
     <nav
       ref={navRef}
-      className="fixed bottom-0 z-40 flex items-center justify-around"
+      className="md:hidden fixed bottom-0 z-40 flex items-center justify-around"
       style={{
         left: '50%',
         transform: 'translateX(-50%)',

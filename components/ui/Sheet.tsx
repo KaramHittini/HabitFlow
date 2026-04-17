@@ -26,14 +26,16 @@ export function Sheet({ open, onClose, title, children }: SheetProps) {
             onClick={onClose}
           />
 
-          {/* sheet */}
+          {/* sheet panel — centered via left:0/right:0/margin:auto to avoid transform conflict */}
           <motion.div
             className="fixed bottom-0 z-50 flex flex-col rounded-t-3xl"
             style={{
-              left: '50%',
-              transform: 'translateX(-50%)',
+              left: 0,
+              right: 0,
+              marginLeft: 'auto',
+              marginRight: 'auto',
               width: '100%',
-              maxWidth: '430px',
+              maxWidth: '480px',
               background: 'var(--bg-surface)',
               border: '1px solid var(--border-strong)',
               borderBottom: 'none',

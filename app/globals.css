@@ -41,17 +41,17 @@
 }
 
 [data-theme="light"] {
-  --bg-base:        #f2f3f8;
-  --bg-card:        #ffffff;
-  --bg-surface:     #eaecf5;
-  --bg-elevated:    #e2e4f0;
-  --border:         rgba(0,0,0,0.06);
-  --border-strong:  rgba(0,0,0,0.12);
+  --bg-base:        #d4d6e4;
+  --bg-card:        #e4e6f2;
+  --bg-surface:     #dcdee8;
+  --bg-elevated:    #d0d2e0;
+  --border:         rgba(0,0,0,0.09);
+  --border-strong:  rgba(0,0,0,0.16);
   --text-primary:   #0d0e18;
   --text-secondary: #5a5a7a;
-  --text-muted:     #9a9ab0;
-  --glass-bg:       rgba(255,255,255,0.75);
-  --glass-border:   rgba(0,0,0,0.08);
+  --text-muted:     #8a8aaa;
+  --glass-bg:       rgba(220,222,232,0.8);
+  --glass-border:   rgba(0,0,0,0.1);
 }
 
 /* ─────────────────────────────────────────
@@ -97,7 +97,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
   margin: 0;
   min-height: 100dvh;
-  overflow-x: hidden;
 }
 
 /* ─────────────────────────────────────────
@@ -220,14 +219,23 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
   margin-inline: auto;
   min-height: 100dvh;
   position: relative;
-  /* subtle card-like frame on wide screens */
+  overflow-x: hidden;
 }
 
-@media (min-width: 600px) {
+/* Phone frame on mid-range screens */
+@media (min-width: 600px) and (max-width: 767px) {
   body {
     background-color: #050507;
   }
   .app-shell {
     box-shadow: 0 0 0 1px var(--border), 0 32px 80px rgba(0,0,0,0.5);
+  }
+}
+
+/* Full desktop layout */
+@media (min-width: 768px) {
+  .app-shell {
+    max-width: 1200px;
+    overflow-x: visible;
   }
 }

@@ -87,7 +87,7 @@ export default function SettingsPage() {
         className="sticky top-0 z-20 px-5 pt-5 pb-4"
         style={{ background: 'var(--bg-base)', borderBottom: '1px solid var(--border)' }}
       >
-        <h1 className="text-2xl font-bold font-display" style={{ color: 'var(--text-primary)' }}>
+        <h1 className="text-2xl font-bold font-display text-center" style={{ color: 'var(--text-primary)' }}>
           Settings
         </h1>
       </div>

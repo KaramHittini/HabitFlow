@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { Reorder } from 'framer-motion'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Plus } from 'lucide-react'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { useAppStore } from '@/store/useAppStore'
@@ -23,7 +24,6 @@ export default function TodayPage() {
   const done     = todayDue.filter((h) => isHabitCompleted(h, logs, todayStr())).length
   const pct      = todayDue.length > 0 ? Math.round((done / todayDue.length) * 100) : 0
 
-  /* Animate progress number */
   useGSAP(() => {
     if (!summaryRef.current) return
     gsap.fromTo(
@@ -40,7 +40,7 @@ export default function TodayPage() {
 
   return (
     <>
-      <TopBar onAddHabit={() => { setEditingHabit(null); setSheetOpen(true) }} />
+      <TopBar />
 
       {/* Summary strip */}
       {todayDue.length > 0 && (
@@ -118,6 +118,21 @@ export default function TodayPage() {
             </Reorder.Group>
           )}
         </AnimatePresence>
+
+        {/* FAB */}
+        <motion.button
+          onClick={() => { setEditingHabit(null); setSheetOpen(true) }}
+          whileTap={{ scale: 0.93 }}
+          className="mt-5 w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-semibold text-sm"
+          style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            color: 'var(--text-secondary)',
+          }}
+        >
+          <Plus size={16} strokeWidth={2.5} />
+          Add habit
+        </motion.button>
       </div>
 
       <HabitSheet open={sheetOpen} onClose={() => setSheetOpen(false)} editing={editingHabit} />
