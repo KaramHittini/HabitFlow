@@ -9,7 +9,7 @@ interface ColorPickerProps {
 
 export function ColorPicker({ value, onChange }: ColorPickerProps) {
   return (
-    <div className="flex flex-wrap gap-2.5">
+    <div className="flex flex-wrap gap-2">
       {ACCENT_COLORS.map((color) => (
         <button
           key={color}
@@ -17,8 +17,8 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
           onClick={() => onChange(color)}
           className="rounded-full transition-all duration-200 focus:outline-none"
           style={{
-            width:     28,
-            height:    28,
+            width:     22,
+            height:    22,
             background: color,
             boxShadow: value === color
               ? `0 0 0 2px var(--bg-surface), 0 0 0 4px ${color}, 0 4px 12px ${color}66`

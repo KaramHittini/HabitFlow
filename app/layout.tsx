@@ -32,7 +32,11 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-dvh">
-        <Providers>{children}</Providers>
+        <Providers>
+          <div className="app-shell" style={{ background: 'var(--bg-base)' }}>
+            {children}
+          </div>
+        </Providers>
       </body>
     </html>
   );

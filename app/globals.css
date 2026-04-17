@@ -210,3 +210,24 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
    SAFE-AREA HELPERS
 ───────────────────────────────────────── */
 .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+
+/* ─────────────────────────────────────────
+   APP SHELL — centered column on desktop
+───────────────────────────────────────── */
+.app-shell {
+  width: 100%;
+  max-width: 430px;
+  margin-inline: auto;
+  min-height: 100dvh;
+  position: relative;
+  /* subtle card-like frame on wide screens */
+}
+
+@media (min-width: 600px) {
+  body {
+    background-color: #050507;
+  }
+  .app-shell {
+    box-shadow: 0 0 0 1px var(--border), 0 32px 80px rgba(0,0,0,0.5);
+  }
+}

@@ -28,8 +28,12 @@ export function Sheet({ open, onClose, title, children }: SheetProps) {
 
           {/* sheet */}
           <motion.div
-            className="fixed bottom-0 left-0 right-0 z-50 flex flex-col rounded-t-3xl"
+            className="fixed bottom-0 z-50 flex flex-col rounded-t-3xl"
             style={{
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '100%',
+              maxWidth: '430px',
               background: 'var(--bg-surface)',
               border: '1px solid var(--border-strong)',
               borderBottom: 'none',
