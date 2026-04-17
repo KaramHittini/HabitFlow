@@ -187,11 +187,19 @@ export default function SettingsPage() {
               onClick={() => setConfirmClear(false)}
             />
             <motion.div
-              className="fixed top-1/2 -translate-y-1/2 z-50 rounded-3xl p-6"
-              style={{ left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 40px)', maxWidth: '390px' }}
-              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-strong)', boxShadow: '0 24px 80px rgba(0,0,0,0.4)' }}
-              initial={{ opacity: 0, scale: 0.88, y: '20px' }}
-              animate={{ opacity: 1, scale: 1, y: '-50%' }}
+              className="fixed z-50 rounded-3xl p-6"
+              style={{
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 'calc(100% - 40px)',
+                maxWidth: '390px',
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border-strong)',
+                boxShadow: '0 24px 80px rgba(0,0,0,0.4)',
+              }}
+              initial={{ opacity: 0, scale: 0.88 }}
+              animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.88 }}
               transition={{ type: 'spring', stiffness: 380, damping: 28 }}
             >
