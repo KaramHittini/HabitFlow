@@ -1,6 +1,7 @@
 import { BottomNav } from '@/components/ui/BottomNav'
 import { Sidebar } from '@/components/ui/Sidebar'
 import { ToastContainer } from '@/components/ui/ToastContainer'
+import { CelebrationOverlay } from '@/components/ui/CelebrationOverlay'
 import { PageTransition } from '@/components/PageTransition'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -14,6 +15,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <BottomNav />
       </div>
       <ToastContainer />
+      <CelebrationOverlay />
     </div>
   )
 }

@@ -15,6 +15,7 @@ import {
 } from '@/lib/dateUtils'
 import { subDays, format } from 'date-fns'
 import { WeeklyDigest } from '@/components/insights/WeeklyDigest'
+import { EmptyState } from '@/components/ui/EmptyState'
 import type { Habit } from '@/types'
 
 type Range = '7d' | '30d' | 'all'
@@ -100,15 +101,12 @@ export default function StatsPage() {
         )}
 
         {habits.length === 0 && (
-          <div className="flex flex-col items-center py-20 gap-3">
-            <div
-              className="w-20 h-20 rounded-3xl flex items-center justify-center text-4xl"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-            >
-              📊
-            </div>
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No habits to show yet</p>
-          </div>
+          <EmptyState
+            emoji="📊"
+            title="No data yet"
+            subtitle="Add your first habit and start tracking your progress."
+            cta={{ label: 'Add a habit', href: '/today' }}
+          />
         )}
 
         {/* Per-habit */}

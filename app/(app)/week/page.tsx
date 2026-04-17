@@ -9,6 +9,7 @@ import gsap from 'gsap'
 import { useAppStore } from '@/store/useAppStore'
 import { WeekGrid } from '@/components/calendar/WeekGrid'
 import { weekDays } from '@/lib/dateUtils'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 export default function WeekPage() {
   const { habits, logs }     = useAppStore()
@@ -68,15 +69,12 @@ export default function WeekPage() {
             transition={{ duration: 0.22 }}
           >
             {habits.length === 0 ? (
-              <div className="flex flex-col items-center py-24 gap-4">
-                <div
-                  className="w-20 h-20 rounded-3xl flex items-center justify-center text-4xl"
-                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-                >
-                  📅
-                </div>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Add habits to see your week</p>
-              </div>
+              <EmptyState
+                emoji="📅"
+                title="Your week is empty"
+                subtitle="Add habits to see how consistently you're showing up each day."
+                cta={{ label: 'Add a habit', href: '/today' }}
+              />
             ) : (
               <WeekGrid habits={habits} logs={logs} days={days} />
             )}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Reorder } from 'framer-motion'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus } from 'lucide-react'
@@ -12,6 +12,46 @@ import { HabitSheet } from '@/components/habits/HabitSheet'
 import { TopBar } from '@/components/ui/TopBar'
 import { todayStr, isHabitDueOnDate, isHabitCompleted } from '@/lib/dateUtils'
 import type { Habit } from '@/types'
+
+const RING_R    = 20
+const RING_CIRC = 2 * Math.PI * RING_R
+
+function AnimatedDonut({ pct }: { pct: number }) {
+  const circleRef = useRef<SVGCircleElement>(null)
+
+  useEffect(() => {
+    const el = circleRef.current
+    if (!el) return
+    /* One tick so the browser registers the initial dashoffset = circumference */
+    const id = requestAnimationFrame(() => {
+      el.style.strokeDashoffset = String(RING_CIRC * (1 - pct / 100))
+    })
+    return () => cancelAnimationFrame(id)
+  }, [pct])
+
+  return (
+    <div className="relative shrink-0 w-12 h-12">
+      <svg width="48" height="48" style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx="24" cy="24" r={RING_R} fill="none" stroke="var(--bg-elevated)" strokeWidth="4" />
+        <circle
+          ref={circleRef}
+          cx="24" cy="24" r={RING_R} fill="none"
+          stroke="var(--accent-green)" strokeWidth="4"
+          strokeLinecap="round"
+          strokeDasharray={RING_CIRC}
+          strokeDashoffset={RING_CIRC}
+          style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1)' }}
+        />
+      </svg>
+      <span
+        className="absolute inset-0 flex items-center justify-center text-xs font-bold"
+        style={{ color: 'var(--text-primary)' }}
+      >
+        {pct}%
+      </span>
+    </div>
+  )
+}
 
 export default function TodayPage() {
   const { habits, reorderHabits, logs } = useAppStore()
@@ -47,26 +87,7 @@ export default function TodayPage() {
         <div ref={summaryRef} className="px-5 pt-3 pb-4">
           <div className="rounded-2xl p-4 flex items-center gap-4"
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            {/* donut circle */}
-            <div className="relative shrink-0 w-12 h-12">
-              <svg width="48" height="48" style={{ transform: 'rotate(-90deg)' }}>
-                <circle cx="24" cy="24" r="20" fill="none" stroke="var(--bg-elevated)" strokeWidth="4" />
-                <circle
-                  cx="24" cy="24" r="20" fill="none"
-                  stroke="var(--accent-green)" strokeWidth="4"
-                  strokeLinecap="round"
-                  strokeDasharray={`${2 * Math.PI * 20}`}
-                  strokeDashoffset={`${2 * Math.PI * 20 * (1 - pct / 100)}`}
-                  style={{ transition: 'stroke-dashoffset 0.6s ease' }}
-                />
-              </svg>
-              <span
-                className="absolute inset-0 flex items-center justify-center text-xs font-bold"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                {pct}%
-              </span>
-            </div>
+            <AnimatedDonut pct={pct} />
 
             <div>
               <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>

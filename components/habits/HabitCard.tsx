@@ -9,6 +9,7 @@ import gsap from 'gsap'
 import type { Habit } from '@/types'
 import { useAppStore } from '@/store/useAppStore'
 import { useToastStore } from '@/store/useToastStore'
+import { useCelebrationStore } from '@/store/useCelebrationStore'
 import { todayStr, isHabitCompleted, calculateStreak } from '@/lib/dateUtils'
 import { createLog } from '@/lib/habitUtils'
 import { CounterButton } from './CounterButton'
@@ -26,6 +27,7 @@ export function HabitCard({ habit, onEdit, index = 0 }: HabitCardProps) {
   const router  = useRouter()
   const { logs, logHabit, deleteHabit, addHabit } = useAppStore()
   const { push } = useToastStore()
+  const { show: showCelebration } = useCelebrationStore()
   const [menuOpen,   setMenuOpen]   = useState(false)
   const [completing, setCompleting] = useState(false)
   const [swipeX,     setSwipeX]     = useState(0)
@@ -68,8 +70,7 @@ export function HabitCard({ habit, onEdit, index = 0 }: HabitCardProps) {
     const freshLogs = useAppStore.getState().logs
     const newStreak = calculateStreak(habit, freshLogs)
     if (MILESTONES.includes(newStreak)) {
-      const emojis: Record<number, string> = { 3: '✨', 7: '🔥', 14: '⚡', 21: '💎', 30: '🏆', 60: '🚀', 100: '👑', 200: '🌟', 365: '🎯' }
-      push({ message: `${emojis[newStreak] ?? '🔥'} ${newStreak}-day streak on ${habit.name}!`, duration: 3500 })
+      showCelebration(newStreak, habit.name, habit.icon)
     }
 
     setCompleting(false)
