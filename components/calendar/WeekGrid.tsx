@@ -1,9 +1,9 @@
 'use client'
 
 import { format, isSameDay } from 'date-fns'
-import { useState } from 'react'
 import type { Habit, HabitLog } from '@/types'
-import { isHabitCompleted, getCompletionPercent, isHabitDueOnDate } from '@/lib/dateUtils'
+import { isHabitCompleted, isHabitDueOnDate } from '@/lib/dateUtils'
+import { Check } from 'lucide-react'
 
 interface WeekGridProps {
   habits: Habit[]
@@ -12,136 +12,135 @@ interface WeekGridProps {
 }
 
 export function WeekGrid({ habits, logs, days }: WeekGridProps) {
-  const [popover, setPopover] = useState<{ habitId: string; date: string } | null>(null)
-
-  /* Today's overall progress for the column header ring */
-  const today       = new Date()
-  const todayStr    = format(today, 'yyyy-MM-dd')
-  const dueToday    = habits.filter((h) => isHabitDueOnDate(h, today))
-  const doneToday   = dueToday.filter((h) => isHabitCompleted(h, logs, todayStr)).length
-  const todayPct    = dueToday.length > 0 ? doneToday / dueToday.length : 0
-  const ringR       = 13
-  const ringC       = 16
-  const ringCirc    = 2 * Math.PI * ringR
+  const today = new Date()
 
   return (
-    <div className="w-full">
-      {/* Day headers */}
-      <div className="grid mb-3" style={{ gridTemplateColumns: '1fr repeat(7, 40px)' }}>
-        <div />
-        {days.map((d) => {
-          const isToday = isSameDay(d, today)
-          return (
-            <div key={d.toISOString()} className="flex flex-col items-center gap-1">
-              <span
-                className="text-[10px] font-bold uppercase tracking-wide"
-                style={{ color: isToday ? 'var(--accent-blue)' : 'var(--text-muted)' }}
-              >
-                {format(d, 'EEE').charAt(0)}
-              </span>
+    <div className="flex flex-col gap-2">
+      {days.map((day) => {
+        const dateStr  = format(day, 'yyyy-MM-dd')
+        const isToday  = isSameDay(day, today)
+        const isFuture = day > today
+        const due      = habits.filter((h) => isHabitDueOnDate(h, day))
+        const done     = due.filter((h) => isHabitCompleted(h, logs, dateStr))
+        const pct      = due.length > 0 ? done.length / due.length : 0
+        const allDone  = due.length > 0 && done.length === due.length
 
-              {isToday ? (
-                /* Progress ring around today's date */
-                <div className="relative w-8 h-8 flex items-center justify-center">
-                  <svg
-                    width="32" height="32"
-                    className="absolute inset-0"
-                    style={{ transform: 'rotate(-90deg)' }}
+        return (
+          <div
+            key={dateStr}
+            className="rounded-2xl p-4"
+            style={{
+              background: isToday ? 'var(--bg-elevated)' : 'var(--bg-card)',
+              border: isToday
+                ? '1px solid var(--accent-blue)'
+                : '1px solid var(--border)',
+            }}
+          >
+            {/* Day header row */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span
+                  className="text-[10px] font-bold uppercase tracking-wider"
+                  style={{ color: isToday ? 'var(--accent-blue)' : 'var(--text-muted)' }}
+                >
+                  {format(day, 'EEE')}
+                </span>
+                <span
+                  className="text-sm font-bold"
+                  style={{ color: isToday ? 'var(--accent-blue)' : 'var(--text-primary)' }}
+                >
+                  {format(day, 'd')}
+                </span>
+                {isToday && (
+                  <span
+                    className="text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide"
+                    style={{ background: 'rgba(79,142,247,0.15)', color: 'var(--accent-blue)' }}
                   >
-                    <circle
-                      cx={ringC} cy={ringC} r={ringR}
-                      fill="none"
-                      stroke="var(--bg-elevated)"
-                      strokeWidth="2.5"
-                    />
-                    <circle
-                      cx={ringC} cy={ringC} r={ringR}
-                      fill="none"
-                      stroke="var(--accent-blue)"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeDasharray={ringCirc}
-                      strokeDashoffset={ringCirc * (1 - todayPct)}
-                      style={{ transition: 'stroke-dashoffset 0.6s ease' }}
-                    />
-                  </svg>
-                  <span className="text-xs font-bold relative" style={{ color: 'var(--text-primary)' }}>
-                    {format(d, 'd')}
+                    Today
                   </span>
-                </div>
-              ) : (
-                <div className="w-8 h-8 flex items-center justify-center">
-                  <span className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
-                    {format(d, 'd')}
-                  </span>
-                </div>
+                )}
+              </div>
+
+              {/* score pill */}
+              {!isFuture && due.length > 0 && (
+                <span
+                  className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                  style={{
+                    background: allDone
+                      ? 'rgba(62,207,107,0.15)'
+                      : pct > 0
+                      ? 'rgba(79,142,247,0.12)'
+                      : 'var(--bg-elevated)',
+                    color: allDone
+                      ? 'var(--accent-green)'
+                      : pct > 0
+                      ? 'var(--accent-blue)'
+                      : 'var(--text-muted)',
+                  }}
+                >
+                  {allDone ? '✓ All done' : `${done.length}/${due.length}`}
+                </span>
+              )}
+              {isFuture && due.length > 0 && (
+                <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                  {due.length} scheduled
+                </span>
               )}
             </div>
-          )
-        })}
-      </div>
 
-      {/* Habit rows */}
-      {habits.map((habit) => (
-        <div
-          key={habit.id}
-          className="grid items-center mb-2.5"
-          style={{ gridTemplateColumns: '1fr repeat(7, 40px)' }}
-        >
-          {/* name */}
-          <div className="flex items-center gap-2 pr-3 min-w-0">
-            <span className="text-sm shrink-0">{habit.icon}</span>
-            <span
-              className="text-xs font-medium truncate"
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              {habit.name}
-            </span>
-          </div>
-
-          {/* cells */}
-          {days.map((d) => {
-            const dateStr   = format(d, 'yyyy-MM-dd')
-            const completed = isHabitCompleted(habit, logs, dateStr)
-            const pct       = getCompletionPercent(habit, logs, dateStr)
-            const isFuture  = d > new Date()
-
-            return (
-              <div key={dateStr} className="flex justify-center">
-                <button
-                  onClick={() =>
-                    setPopover(
-                      popover?.habitId === habit.id && popover.date === dateStr
-                        ? null : { habitId: habit.id, date: dateStr }
-                    )
-                  }
-                  className="w-7 h-7 rounded-full flex items-center justify-center transition-transform hover:scale-110"
-                >
-                  {completed ? (
+            {/* Habit dots */}
+            {due.length === 0 ? (
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>No habits due</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {due.map((habit) => {
+                  const completed = isHabitCompleted(habit, logs, dateStr)
+                  return (
                     <div
-                      className="w-4 h-4 rounded-full"
-                      style={{ background: habit.color, opacity: isFuture ? 0.3 : 1 }}
-                    />
-                  ) : pct > 0 ? (
-                    <div
-                      className="w-4 h-4 rounded-full border-2"
-                      style={{ borderColor: habit.color, opacity: 0.55 }}
-                    />
-                  ) : (
-                    <div
-                      className="w-1.5 h-1.5 rounded-full"
+                      key={habit.id}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl"
                       style={{
-                        background: 'var(--border-strong)',
-                        opacity: isFuture ? 0.25 : 0.6,
+                        background: completed
+                          ? habit.color + '22'
+                          : isFuture
+                          ? 'var(--bg-elevated)'
+                          : 'var(--bg-elevated)',
+                        opacity: isFuture ? 0.45 : 1,
                       }}
-                    />
-                  )}
-                </button>
+                    >
+                      {completed ? (
+                        <div
+                          className="w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0"
+                          style={{ background: habit.color }}
+                        >
+                          <Check size={8} color="white" strokeWidth={3} />
+                        </div>
+                      ) : (
+                        <div
+                          className="w-3.5 h-3.5 rounded-full border shrink-0"
+                          style={{ borderColor: 'var(--border-strong)' }}
+                        />
+                      )}
+                      <span
+                        className="text-xs font-medium"
+                        style={{
+                          color: completed ? habit.color : 'var(--text-muted)',
+                          maxWidth: '80px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {habit.icon} {habit.name}
+                      </span>
+                    </div>
+                  )
+                })}
               </div>
-            )
-          })}
-        </div>
-      ))}
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }

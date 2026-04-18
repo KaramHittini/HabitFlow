@@ -104,48 +104,12 @@ export default function TodayPage() {
         </div>
       )}
 
-      <div className="px-5 pb-6">
-        <AnimatePresence mode="wait">
-          {habits.length === 0 ? (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center justify-center py-24 gap-4 text-center"
-            >
-              <div
-                className="w-20 h-20 rounded-3xl flex items-center justify-center text-4xl"
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-              >
-                🌱
-              </div>
-              <div>
-                <p className="font-bold mb-1" style={{ color: 'var(--text-primary)' }}>No habits yet</p>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Tap + to add your first one</p>
-              </div>
-            </motion.div>
-          ) : (
-            <Reorder.Group
-              as="div"
-              axis="y"
-              values={habits}
-              onReorder={reorderHabits}
-              className="flex flex-col gap-2.5 mt-1"
-            >
-              {habits.map((habit, i) => (
-                <Reorder.Item key={habit.id} value={habit} className="cursor-grab active:cursor-grabbing">
-                  <HabitCard habit={habit} onEdit={handleEdit} index={i} />
-                </Reorder.Item>
-              ))}
-            </Reorder.Group>
-          )}
-        </AnimatePresence>
-
-        {/* FAB */}
+      <div className="px-5 pb-6 flex flex-col gap-3">
+        {/* Add habit button — always at top */}
         <motion.button
           onClick={() => { setEditingHabit(null); setSheetOpen(true) }}
           whileTap={{ scale: 0.93 }}
-          className="mt-5 w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-semibold text-sm"
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-semibold text-sm"
           style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
@@ -155,6 +119,50 @@ export default function TodayPage() {
           <Plus size={16} strokeWidth={2.5} />
           Add habit
         </motion.button>
+
+        {/* Empty state below button */}
+        <AnimatePresence>
+          {habits.length === 0 && (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center justify-center py-16 gap-4 text-center"
+            >
+              <div
+                className="w-20 h-20 rounded-3xl flex items-center justify-center text-4xl"
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+              >
+                🌱
+              </div>
+              <div>
+                <p className="font-bold mb-1" style={{ color: 'var(--text-primary)' }}>No habits yet</p>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Tap the button above to add your first one</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Habits list */}
+        <AnimatePresence>
+          {habits.length > 0 && (
+            <Reorder.Group
+              key="list"
+              as="div"
+              axis="y"
+              values={habits}
+              onReorder={reorderHabits}
+              className="flex flex-col gap-2.5"
+            >
+              {habits.map((habit, i) => (
+                <Reorder.Item key={habit.id} value={habit} className="cursor-grab active:cursor-grabbing">
+                  <HabitCard habit={habit} onEdit={handleEdit} index={i} />
+                </Reorder.Item>
+              ))}
+            </Reorder.Group>
+          )}
+        </AnimatePresence>
       </div>
 
       <HabitSheet open={sheetOpen} onClose={() => setSheetOpen(false)} editing={editingHabit} />

@@ -25,7 +25,7 @@ const MILESTONES = [3, 7, 14, 21, 30, 60, 100, 200, 365]
 
 export function HabitCard({ habit, onEdit, index = 0 }: HabitCardProps) {
   const router  = useRouter()
-  const { logs, logHabit, deleteHabit, archiveHabit, addHabit, setLogNote } = useAppStore()
+  const { logs, logHabit, deleteHabit, deleteLog, archiveHabit, addHabit, setLogNote } = useAppStore()
   const { push } = useToastStore()
   const { show: showCelebration } = useCelebrationStore()
   const [menuOpen,   setMenuOpen]   = useState(false)
@@ -53,7 +53,12 @@ export function HabitCard({ habit, onEdit, index = 0 }: HabitCardProps) {
   }, [])
 
   const handleCheck = async () => {
-    if (completing || completed) return
+    if (completing) return
+    if (completed) {
+      deleteLog(habit.id, today)
+      setNoteOpen(false)
+      return
+    }
     setCompleting(true)
 
     gsap.timeline()
@@ -139,7 +144,7 @@ export function HabitCard({ habit, onEdit, index = 0 }: HabitCardProps) {
 
   return (
     <div className="flex flex-col gap-1">
-    <div className="relative rounded-2xl overflow-hidden">
+    <div className="relative rounded-2xl">
       {/* Swipe reveal */}
       <div
         className="absolute inset-0 flex items-center pl-5 rounded-2xl"

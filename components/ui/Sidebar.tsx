@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { CheckSquare, Calendar, BarChart2, Settings } from 'lucide-react'
-import { motion } from 'framer-motion'
 import { useAppStore } from '@/store/useAppStore'
 import { todayStr, isHabitDueOnDate, isHabitCompleted } from '@/lib/dateUtils'
 
@@ -55,17 +54,13 @@ export function Sidebar() {
             <Link
               key={href}
               href={href}
-              className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors"
-              style={{ color: active ? 'var(--accent-blue)' : 'var(--text-secondary)' }}
+              className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200"
+              style={{
+                background: active ? 'rgba(79,142,247,0.1)' : 'transparent',
+                color: active ? 'var(--accent-blue)' : 'var(--text-secondary)',
+              }}
             >
-              {active && (
-                <motion.div
-                  layoutId="sidebar-pill"
-                  className="absolute inset-0 rounded-xl"
-                  style={{ background: 'rgba(79,142,247,0.1)' }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                />
-              )}
+              {null}
               <Icon
                 size={17}
                 strokeWidth={active ? 2.5 : 1.75}

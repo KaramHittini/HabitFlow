@@ -6,7 +6,6 @@ import { CheckSquare, Calendar, BarChart2, Settings } from 'lucide-react'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { useRef } from 'react'
-import { motion } from 'framer-motion'
 
 gsap.registerPlugin()
 
@@ -56,14 +55,10 @@ export function BottomNav() {
             className="relative flex flex-col items-center justify-center gap-1 flex-1 h-full group"
           >
             {/* active pill */}
-            {active && (
-              <motion.div
-                layoutId="nav-active-pill"
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full"
-                style={{ background: 'var(--accent-blue)' }}
-                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-              />
-            )}
+            <div
+              className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full transition-all duration-200"
+              style={{ background: active ? 'var(--accent-blue)' : 'transparent' }}
+            />
 
             <div
               className="w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200"

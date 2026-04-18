@@ -152,7 +152,7 @@ export default function SettingsPage() {
         {/* Notifications */}
         <div className="settings-section">
           <SectionLabel>Notifications</SectionLabel>
-          <div className="rounded-2xl overflow-hidden divide-y" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderColor: 'var(--border)' } as React.CSSProperties}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <SettingsRow
               icon={<Bell size={16} style={{ color: 'var(--accent-blue)' }} />}
               iconColor="var(--accent-blue)"
@@ -178,7 +178,6 @@ export default function SettingsPage() {
                 ) : null
               }
             />
-            <div style={{ height: '1px', background: 'var(--border)' }} />
             <SettingsRow
               icon={<CalendarDays size={16} style={{ color: 'var(--accent-purple)' }} />}
               iconColor="var(--accent-purple)"
@@ -204,7 +203,7 @@ export default function SettingsPage() {
         {/* Data */}
         <div className="settings-section">
           <SectionLabel>Data</SectionLabel>
-          <div className="rounded-2xl overflow-hidden divide-y" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', '--tw-divide-opacity': 1, borderColor: 'var(--border)' } as React.CSSProperties}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <SettingsRow
               icon={<Download size={16} style={{ color: 'var(--accent-green)' }} />}
               iconColor="var(--accent-green)"
@@ -212,7 +211,6 @@ export default function SettingsPage() {
               subtitle="Download a JSON backup"
               onClick={() => exportData(allHabits, logs)}
             />
-            <div style={{ height: '1px', background: 'var(--border)' }} />
             <SettingsRow
               icon={<Upload size={16} style={{ color: 'var(--accent-blue)' }} />}
               iconColor="var(--accent-blue)"
@@ -221,7 +219,6 @@ export default function SettingsPage() {
               onClick={() => importRef.current?.click()}
             />
             <input ref={importRef} type="file" accept=".json" className="hidden" onChange={handleImportFile} />
-            <div style={{ height: '1px', background: 'var(--border)' }} />
             <SettingsRow
               icon={<Trash2 size={16} style={{ color: 'var(--accent-red)' }} />}
               iconColor="var(--accent-red)"
@@ -282,114 +279,65 @@ export default function SettingsPage() {
       {/* Import confirm dialog */}
       <AnimatePresence>
         {pendingImport && (
-          <>
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-5"
+            style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setPendingImport(null)}
+          >
             <motion.div
-              className="fixed inset-0 z-40"
-              style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setPendingImport(null)}
-            />
-            <motion.div
-              className="fixed z-50 rounded-3xl p-6"
-              style={{
-                left: '50%', top: '50%', transform: 'translate(-50%,-50%)',
-                width: 'calc(100% - 40px)', maxWidth: '390px',
-                background: 'var(--bg-elevated)', border: '1px solid var(--border-strong)',
-                boxShadow: '0 24px 80px rgba(0,0,0,0.4)',
-              }}
-              initial={{ opacity: 0, scale: 0.88 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.88 }}
+              className="w-full rounded-3xl p-6"
+              style={{ maxWidth: '390px', background: 'var(--bg-elevated)', border: '1px solid var(--border-strong)', boxShadow: '0 24px 80px rgba(0,0,0,0.4)' }}
+              initial={{ scale: 0.88, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.88, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+              onClick={(e) => e.stopPropagation()}
             >
               <div className="text-3xl mb-3">📥</div>
-              <h2 className="text-lg font-bold font-display mb-2" style={{ color: 'var(--text-primary)' }}>
-                Import data
-              </h2>
+              <h2 className="text-lg font-bold font-display mb-2" style={{ color: 'var(--text-primary)' }}>Import data</h2>
               <p className="text-sm mb-6 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                Found {(pendingImport.habits as unknown[]).length} habits and {(pendingImport.logs as unknown[]).length} logs.
-                How would you like to import?
+                Found {(pendingImport.habits as unknown[]).length} habits and {(pendingImport.logs as unknown[]).length} logs. How would you like to import?
               </p>
               <div className="flex flex-col gap-2">
-                <button
-                  onClick={() => confirmImport('merge')}
-                  className="w-full py-3 rounded-xl font-semibold text-sm"
-                  style={{ background: 'var(--accent-blue)', color: '#fff' }}
-                >
-                  Merge with existing
-                </button>
-                <button
-                  onClick={() => confirmImport('replace')}
-                  className="w-full py-3 rounded-xl font-semibold text-sm"
-                  style={{ background: 'rgba(248,113,113,0.12)', color: 'var(--accent-red)' }}
-                >
-                  Replace all data
-                </button>
-                <button
-                  onClick={() => setPendingImport(null)}
-                  className="w-full py-3 rounded-xl font-semibold text-sm"
-                  style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}
-                >
-                  Cancel
-                </button>
+                <button onClick={() => confirmImport('merge')} className="w-full py-3 rounded-xl font-semibold text-sm" style={{ background: 'var(--accent-blue)', color: '#fff' }}>Merge with existing</button>
+                <button onClick={() => confirmImport('replace')} className="w-full py-3 rounded-xl font-semibold text-sm" style={{ background: 'rgba(248,113,113,0.12)', color: 'var(--accent-red)' }}>Replace all data</button>
+                <button onClick={() => setPendingImport(null)} className="w-full py-3 rounded-xl font-semibold text-sm" style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>Cancel</button>
               </div>
             </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
 
       {/* Confirm clear dialog */}
       <AnimatePresence>
         {confirmClear && (
-          <>
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-5"
+            style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setConfirmClear(false)}
+          >
             <motion.div
-              className="fixed inset-0 z-40"
-              style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setConfirmClear(false)}
-            />
-            <motion.div
-              className="fixed z-50 rounded-3xl p-6"
-              style={{
-                left: '50%',
-                top: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: 'calc(100% - 40px)',
-                maxWidth: '390px',
-                background: 'var(--bg-elevated)',
-                border: '1px solid var(--border-strong)',
-                boxShadow: '0 24px 80px rgba(0,0,0,0.4)',
-              }}
-              initial={{ opacity: 0, scale: 0.88 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.88 }}
+              className="w-full rounded-3xl p-6"
+              style={{ maxWidth: '390px', background: 'var(--bg-elevated)', border: '1px solid var(--border-strong)', boxShadow: '0 24px 80px rgba(0,0,0,0.4)' }}
+              initial={{ scale: 0.88, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.88, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+              onClick={(e) => e.stopPropagation()}
             >
               <div className="text-3xl mb-3">⚠️</div>
-              <h2 className="text-lg font-bold font-display mb-2" style={{ color: 'var(--text-primary)' }}>
-                Clear all data?
-              </h2>
+              <h2 className="text-lg font-bold font-display mb-2" style={{ color: 'var(--text-primary)' }}>Clear all data?</h2>
               <p className="text-sm mb-6 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                 This will permanently delete all habits and logs. This action cannot be undone.
               </p>
               <div className="flex gap-3">
-                <button
-                  onClick={() => setConfirmClear(false)}
-                  className="flex-1 py-3 rounded-xl font-semibold text-sm"
-                  style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => { clearAllData(); setConfirmClear(false) }}
-                  className="flex-1 py-3 rounded-xl font-bold text-sm text-white"
-                  style={{ background: 'var(--accent-red)', boxShadow: '0 4px 16px rgba(248,113,113,0.3)' }}
-                >
-                  Delete All
-                </button>
+                <button onClick={() => setConfirmClear(false)} className="flex-1 py-3 rounded-xl font-semibold text-sm" style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}>Cancel</button>
+                <button onClick={() => { clearAllData(); setConfirmClear(false) }} className="flex-1 py-3 rounded-xl font-bold text-sm text-white" style={{ background: 'var(--accent-red)', boxShadow: '0 4px 16px rgba(248,113,113,0.3)' }}>Delete All</button>
               </div>
             </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

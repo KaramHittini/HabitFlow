@@ -1,6 +1,7 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
+import { useRef } from 'react'
+import { motion, AnimatePresence, useDragControls } from 'framer-motion'
 import { X } from 'lucide-react'
 
 interface SheetProps {
@@ -11,6 +12,9 @@ interface SheetProps {
 }
 
 export function Sheet({ open, onClose, title, children }: SheetProps) {
+  const dragControls = useDragControls()
+  const constraintsRef = useRef<HTMLDivElement>(null)
+
   return (
     <AnimatePresence>
       {open && (
@@ -26,7 +30,10 @@ export function Sheet({ open, onClose, title, children }: SheetProps) {
             onClick={onClose}
           />
 
-          {/* sheet panel — centered via left:0/right:0/margin:auto to avoid transform conflict */}
+          {/* drag constraint anchor — invisible, sits at top of sheet */}
+          <div ref={constraintsRef} className="fixed bottom-0 z-50" style={{ left: 0, right: 0, marginLeft: 'auto', marginRight: 'auto', width: '100%', maxWidth: '480px', top: 0, pointerEvents: 'none' }} />
+
+          {/* sheet panel */}
           <motion.div
             className="fixed bottom-0 z-50 flex flex-col rounded-t-3xl"
             style={{
@@ -42,14 +49,25 @@ export function Sheet({ open, onClose, title, children }: SheetProps) {
               maxHeight: '94dvh',
               boxShadow: '0 -24px 80px rgba(0,0,0,0.4)',
             }}
+            drag="y"
+            dragControls={dragControls}
+            dragListener={false}
+            dragConstraints={{ top: 0 }}
+            dragElastic={{ top: 0, bottom: 0.35 }}
+            onDragEnd={(_, info) => {
+              if (info.offset.y > 90 || info.velocity.y > 600) onClose()
+            }}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
           >
-            {/* drag handle */}
-            <div className="flex justify-center pt-3 pb-2 shrink-0">
-              <div className="w-8 h-1 rounded-full" style={{ background: 'var(--border-strong)' }} />
+            {/* drag handle — initiates the drag */}
+            <div
+              className="flex justify-center pt-3 pb-2 shrink-0 cursor-grab active:cursor-grabbing touch-none"
+              onPointerDown={(e) => dragControls.start(e)}
+            >
+              <div className="w-10 h-1 rounded-full" style={{ background: 'var(--border-strong)' }} />
             </div>
 
             {/* header */}
