@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
@@ -24,6 +24,13 @@ export const metadata: Metadata = {
   other: { "mobile-web-app-capable": "yes" },
 };
 
+export const viewport: Viewport = {
+  themeColor: "#0f0f14",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -35,10 +42,6 @@ export default function RootLayout({
       className={`${bricolage.variable} ${dmSans.variable}`}
       suppressHydrationWarning
     >
-      <head>
-        <meta name="theme-color" content="#0f0f14" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-      </head>
       <body className="min-h-dvh">
         <Providers>
           <div className="app-shell" style={{ background: 'var(--bg-base)' }}>
