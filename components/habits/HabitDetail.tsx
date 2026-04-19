@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, Flame, MoreHorizontal } from 'lucide-react'
 import { addMonths, subMonths, format } from 'date-fns'
@@ -17,15 +17,24 @@ import { HabitBarChart } from '@/components/charts/HabitBarChart'
 import { HabitHeatmap } from '@/components/charts/HabitHeatmap'
 import { TimeInsightCard } from '@/components/insights/TimeInsightCard'
 import { HabitSheet } from './HabitSheet'
+import { formatDuration } from '@/lib/habitUtils'
 
 interface HabitDetailProps { habit: Habit }
 
 export function HabitDetail({ habit }: HabitDetailProps) {
   const router = useRouter()
   const { logs, deleteHabit } = useAppStore()
-  const [month,    setMonth]    = useState(new Date())
-  const [editOpen, setEditOpen] = useState(false)
-  const [menuOpen, setMenuOpen] = useState(false)
+  const [month,       setMonth]       = useState(new Date())
+  const [editOpen,    setEditOpen]    = useState(false)
+  const [menuOpen,    setMenuOpen]    = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
+
+  const HISTORY_PAGE = 20
+  const historyLogs = useMemo(() =>
+    logs
+      .filter((l) => l.habitId === habit.id)
+      .sort((a, b) => b.date.localeCompare(a.date))
+  , [logs, habit.id])
   const headerRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
 
@@ -194,27 +203,77 @@ export function HabitDetail({ habit }: HabitDetailProps) {
           <HabitHeatmap habit={habit} logs={logs} />
         </div>
 
-        {/* recent reflections */}
-        {(() => {
-          const notedLogs = logs
-            .filter((l) => l.habitId === habit.id && l.note)
-            .sort((a, b) => b.date.localeCompare(a.date))
-            .slice(0, 10)
-          if (notedLogs.length === 0) return null
-          return (
-            <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-              <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                Reflections
-              </p>
-              {notedLogs.map((l) => (
-                <div key={l.date} className="flex flex-col gap-0.5">
-                  <span className="text-[10px] font-semibold" style={{ color: 'var(--text-muted)' }}>{l.date}</span>
-                  <p className="text-sm leading-snug" style={{ color: 'var(--text-primary)' }}>{l.note}</p>
-                </div>
-              ))}
+        {/* Empty state when no completions yet */}
+        {total === 0 && (
+          <div
+            className="rounded-2xl p-6 flex flex-col items-center gap-3 text-center"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+          >
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl"
+              style={{ background: habit.color + '18' }}
+            >
+              {habit.icon}
             </div>
-          )
-        })()}
+            <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
+              No completions yet
+            </p>
+            <p className="text-xs leading-relaxed max-w-45" style={{ color: 'var(--text-muted)' }}>
+              Complete this habit on the Today tab to start building your streak
+            </p>
+          </div>
+        )}
+
+        {/* Full log history */}
+        {historyLogs.length > 0 && (
+          <div
+            className="rounded-2xl overflow-hidden"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+          >
+            <p className="text-xs font-bold uppercase tracking-wider px-4 pt-4 pb-3" style={{ color: 'var(--text-muted)' }}>
+              History
+            </p>
+            {historyLogs.slice(0, historyOpen ? undefined : HISTORY_PAGE).map((l, i) => (
+              <div key={l.date}>
+                {i > 0 && <div style={{ height: '1px', background: 'var(--border)' }} />}
+                <div className="flex items-start gap-3 px-4 py-3">
+                  <div
+                    className="w-2 h-2 rounded-full mt-1.5 shrink-0"
+                    style={{ background: habit.color }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                        {format(new Date(l.date), 'EEE, MMM d yyyy')}
+                      </span>
+                      {habit.type !== 'check' && (
+                        <span className="text-xs font-bold shrink-0" style={{ color: habit.color }}>
+                          {habit.type === 'timer'
+                            ? formatDuration(l.value)
+                            : `${l.value}${habit.unit ? ` ${habit.unit}` : '×'}`}
+                        </span>
+                      )}
+                    </div>
+                    {l.note && (
+                      <p className="text-xs mt-1 leading-snug" style={{ color: 'var(--text-muted)' }}>
+                        {l.note}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {historyLogs.length > HISTORY_PAGE && (
+              <button
+                onClick={() => setHistoryOpen((v) => !v)}
+                className="w-full py-3 text-xs font-semibold transition-colors hover:bg-white/3"
+                style={{ borderTop: '1px solid var(--border)', color: 'var(--accent-blue)' }}
+              >
+                {historyOpen ? 'Show less' : `Show all ${historyLogs.length} entries`}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <HabitSheet open={editOpen} onClose={() => setEditOpen(false)} editing={habit} />
