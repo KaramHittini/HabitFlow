@@ -1,26 +1,28 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { useAppStore } from '@/store/useAppStore'
 import { HabitPreviewCard } from '@/components/onboarding/HabitPreviewCard'
 
-const CONFETTI = Array.from({ length: 50 }, (_, i) => ({
-  color: ['#4f8ef7','#3ecf6b','#f97316','#a78bfa','#f472b6','#fbbf24','#22d3ee'][i % 7],
-  left:  Math.random() * 100,
-  delay: Math.random() * 1.6,
-  dur:   2.2 + Math.random() * 1.8,
-  size:  4 + Math.random() * 6,
-  rot:   Math.random() * 360,
-}))
-
 export default function ReadyPage() {
   const router = useRouter()
   const { habits, setOnboardingDone } = useAppStore()
   const lastHabit = habits[habits.length - 1]
   const heroRef   = useRef<HTMLDivElement>(null)
+
+  const confetti = useMemo(() =>
+    Array.from({ length: 50 }, (_, i) => ({
+      color: ['#4f8ef7','#3ecf6b','#f97316','#a78bfa','#f472b6','#fbbf24','#22d3ee'][i % 7],
+      left:  Math.random() * 100,
+      delay: Math.random() * 1.6,
+      dur:   2.2 + Math.random() * 1.8,
+      size:  4 + Math.random() * 6,
+      rot:   Math.random() * 360,
+    }))
+  , [])
 
   useGSAP(() => {
     gsap.timeline()
@@ -45,7 +47,7 @@ export default function ReadyPage() {
       style={{ background: 'var(--bg-base)' }}
     >
       {/* confetti */}
-      {CONFETTI.map((c, i) => (
+      {confetti.map((c, i) => (
         <div
           key={i}
           className="absolute rounded-sm pointer-events-none"
