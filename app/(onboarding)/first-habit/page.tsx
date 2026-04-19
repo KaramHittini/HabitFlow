@@ -12,6 +12,24 @@ import type { HabitType } from '@/types'
 import { useAppStore } from '@/store/useAppStore'
 import { createHabit } from '@/lib/habitUtils'
 
+function StepDots({ current, total }: { current: number; total: number }) {
+  return (
+    <div className="flex items-center gap-1.5 justify-center">
+      {Array.from({ length: total }, (_, i) => (
+        <div
+          key={i}
+          className="rounded-full transition-all duration-300"
+          style={{
+            width:      i === current - 1 ? '20px' : '6px',
+            height:     '6px',
+            background: i === current - 1 ? 'var(--accent-blue)' : 'var(--border-strong)',
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
@@ -123,6 +141,7 @@ export default function FirstHabitPage() {
         >
           Create Habit
         </button>
+        <StepDots current={3} total={4} />
       </div>
     </div>
   )

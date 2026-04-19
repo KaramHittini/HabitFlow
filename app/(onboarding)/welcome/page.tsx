@@ -14,6 +14,24 @@ const FLOAT_CARDS = [
   { icon: '💪', name: 'Workout',      color: '#f472b6', x: '46%', delay: 1.8 },
 ]
 
+function StepDots({ current, total }: { current: number; total: number }) {
+  return (
+    <div className="flex items-center gap-1.5 justify-center">
+      {Array.from({ length: total }, (_, i) => (
+        <div
+          key={i}
+          className="rounded-full transition-all duration-300"
+          style={{
+            width:      i === current - 1 ? '20px' : '6px',
+            height:     '6px',
+            background: i === current - 1 ? 'var(--accent-blue)' : 'var(--border-strong)',
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
 export default function WelcomePage() {
   const router     = useRouter()
   const heroRef    = useRef<HTMLDivElement>(null)
@@ -92,6 +110,7 @@ export default function WelcomePage() {
         >
           Get Started
         </button>
+        <StepDots current={1} total={4} />
       </div>
     </div>
   )

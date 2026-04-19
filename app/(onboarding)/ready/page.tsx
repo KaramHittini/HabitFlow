@@ -7,6 +7,24 @@ import gsap from 'gsap'
 import { useAppStore } from '@/store/useAppStore'
 import { HabitPreviewCard } from '@/components/onboarding/HabitPreviewCard'
 
+function StepDots({ current, total }: { current: number; total: number }) {
+  return (
+    <div className="flex items-center gap-1.5 justify-center">
+      {Array.from({ length: total }, (_, i) => (
+        <div
+          key={i}
+          className="rounded-full transition-all duration-300"
+          style={{
+            width:      i === current - 1 ? '20px' : '6px',
+            height:     '6px',
+            background: i === current - 1 ? 'var(--accent-blue)' : 'var(--border-strong)',
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
 export default function ReadyPage() {
   const router = useRouter()
   const { habits, setOnboardingDone } = useAppStore()
@@ -91,6 +109,7 @@ export default function ReadyPage() {
         >
           Start Tracking
         </button>
+        <StepDots current={4} total={4} />
       </div>
     </div>
   )
