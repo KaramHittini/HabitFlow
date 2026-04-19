@@ -48,7 +48,7 @@ function ToastItem({ toast }: { toast: Toast }) {
     </motion.div>
   );
 }
-// idk tbh
+
 export function ToastContainer() {
   const toasts = useToastStore((s) => s.toasts);
 
