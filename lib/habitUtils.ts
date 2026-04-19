@@ -32,7 +32,7 @@ export const createLog = (
 })
 
 export const exportData = (habits: Habit[], logs: HabitLog[]): void => {
-  const data = { habits, logs, exportedAt: new Date().toISOString() }
+  const data = { version: '1', exportedAt: new Date().toISOString(), habits, logs }
   const blob = new Blob([JSON.stringify(data, null, 2)], {
     type: 'application/json',
   })
