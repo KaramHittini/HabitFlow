@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { nanoid } from 'nanoid'
 import type { Habit, HabitLog, User } from '@/types'
+import { hashPassword } from '@/lib/crypto'
 
 interface AppStore {
   habits: Habit[]
@@ -35,11 +36,11 @@ interface AppStore {
   userData: Record<string, { habits: Habit[]; logs: HabitLog[]; onboardingDone: boolean }>
 
   // Auth actions
-  signup: (email: string, password: string, nickname?: string) => void
-  login: (email: string, password: string) => void
+  signup: (email: string, password: string, nickname?: string) => Promise<void>
+  login: (email: string, password: string) => Promise<void>
   logout: () => void
   updateProfile: (updates: { nickname?: string; avatarDataUrl?: string }) => void
-  changePassword: (oldPassword: string, newPassword: string) => void
+  changePassword: (oldPassword: string, newPassword: string) => Promise<void>
 }
 
 export const useAppStore = create<AppStore>()(
@@ -140,29 +141,29 @@ export const useAppStore = create<AppStore>()(
         }
       },
 
-      signup: (email, password, nickname) => {
+      signup: async (email, password, nickname) => {
         const { users } = get()
         if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
           throw new Error('email_taken')
         }
-        const id = nanoid()
-        const user: User = { id, email, password, ...(nickname ? { nickname } : {}) }
+        const id   = nanoid()
+        const hash = await hashPassword(password)
+        const user: User = { id, email, password: hash, ...(nickname ? { nickname } : {}) }
         set((s) => ({ users: [...s.users, user], currentUserId: id }))
       },
 
-      login: (email, password) => {
+      login: async (email, password) => {
         const { users, currentUserId, habits, logs, onboardingDone, userData } = get()
         const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase())
         if (!user) throw new Error('not_found')
-        if (user.password !== password) throw new Error('wrong_password')
+        const hash = await hashPassword(password)
+        if (user.password !== hash) throw new Error('wrong_password')
 
-        // Flush current user's data before switching
         const updatedUserData = { ...userData }
         if (currentUserId) {
           updatedUserData[currentUserId] = { habits, logs, onboardingDone }
         }
 
-        // Load new user's data (empty defaults for a brand-new account)
         const loaded = updatedUserData[user.id] ?? { habits: [], logs: [], onboardingDone: false }
 
         set({
@@ -192,12 +193,14 @@ export const useAppStore = create<AppStore>()(
         set({ users: users.map((u) => (u.id === currentUserId ? { ...u, ...updates } : u)) })
       },
 
-      changePassword: (oldPassword, newPassword) => {
+      changePassword: async (oldPassword, newPassword) => {
         const { currentUserId, users } = get()
         if (!currentUserId) return
-        const user = users.find((u) => u.id === currentUserId)
-        if (!user || user.password !== oldPassword) throw new Error('wrong_password')
-        set({ users: users.map((u) => (u.id === currentUserId ? { ...u, password: newPassword } : u)) })
+        const user    = users.find((u) => u.id === currentUserId)
+        const oldHash = await hashPassword(oldPassword)
+        if (!user || user.password !== oldHash) throw new Error('wrong_password')
+        const newHash = await hashPassword(newPassword)
+        set({ users: users.map((u) => (u.id === currentUserId ? { ...u, password: newHash } : u)) })
       },
     }),
     {

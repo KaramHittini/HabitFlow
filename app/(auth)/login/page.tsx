@@ -25,11 +25,11 @@ export default function LoginPage() {
     )
   }, [])
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError('')
     if (!email.trim() || !password) { setError('Please fill in all fields'); return }
     try {
-      login(email.trim(), password)
+      await login(email.trim(), password)
       const { onboardingDone } = useAppStore.getState()
       router.replace(onboardingDone ? '/today' : '/welcome')
     } catch (e: unknown) {

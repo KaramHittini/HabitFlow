@@ -106,13 +106,13 @@ export default function SettingsPage() {
   const [newPw,     setNewPw]     = useState('')
   const [confirmPw, setConfirmPw] = useState('')
   const [pwError,   setPwError]   = useState('')
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     setPwError('')
     if (!oldPw || !newPw)       { setPwError('Please fill in all fields'); return }
     if (newPw !== confirmPw)    { setPwError('New passwords do not match'); return }
     if (newPw.length < 6)       { setPwError('Password must be at least 6 characters'); return }
     try {
-      changePassword(oldPw, newPw)
+      await changePassword(oldPw, newPw)
       setOldPw(''); setNewPw(''); setConfirmPw('')
       setPwOpen(false)
     } catch {

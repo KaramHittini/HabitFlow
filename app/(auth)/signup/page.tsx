@@ -27,13 +27,13 @@ export default function SignupPage() {
     )
   }, [])
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError('')
     if (!email.trim() || !password) { setError('Please fill in all required fields'); return }
     if (password !== confirm)        { setError('Passwords do not match'); return }
     if (password.length < 6)         { setError('Password must be at least 6 characters'); return }
     try {
-      signup(email.trim(), password, nickname.trim() || undefined)
+      await signup(email.trim(), password, nickname.trim() || undefined)
       router.replace('/welcome')
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : ''
