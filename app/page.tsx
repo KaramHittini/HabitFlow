@@ -6,14 +6,16 @@ import { useAppStore } from '@/store/useAppStore'
 import { useHasHydrated } from '@/hooks/useHasHydrated'
 
 export default function RootPage() {
-  const router = useRouter()
-  const hydrated = useHasHydrated()
+  const router         = useRouter()
+  const hydrated       = useHasHydrated()
+  const currentUserId  = useAppStore((s) => s.currentUserId)
   const onboardingDone = useAppStore((s) => s.onboardingDone)
 
   useEffect(() => {
     if (!hydrated) return
+    if (!currentUserId) { router.replace('/login'); return }
     router.replace(onboardingDone ? '/today' : '/welcome')
-  }, [hydrated, onboardingDone, router])
+  }, [hydrated, currentUserId, onboardingDone, router])
 
   return (
     <div
