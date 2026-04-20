@@ -1,14 +1,19 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, Download, Upload, Trash2, Info, Palette, CalendarDays, RotateCcw } from 'lucide-react'
+import {
+  Bell, Download, Upload, Trash2, Info, Palette, CalendarDays, RotateCcw,
+  LogOut, Lock, Camera,
+} from 'lucide-react'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { useAppStore } from '@/store/useAppStore'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { exportData } from '@/lib/habitUtils'
 import { getWeekDigest, buildDigestNotification } from '@/lib/insights'
+import { Sheet } from '@/components/ui/Sheet'
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -61,10 +66,65 @@ function SettingsRow({
   )
 }
 
+function avatarInitial(user: { email: string; nickname?: string }): string {
+  const src = user.nickname ?? user.email
+  return src.charAt(0).toUpperCase()
+}
+
 export default function SettingsPage() {
   const { habits: allHabits, logs, clearAllData, unarchiveHabit, importData } = useAppStore()
   const habits         = allHabits.filter((h) => !h.archived)
   const archivedHabits = allHabits.filter((h) => h.archived)
+  const router = useRouter()
+  const { logout, updateProfile, changePassword, users, currentUserId } = useAppStore()
+  const currentUser = users.find((u) => u.id === currentUserId) ?? null
+
+  // Avatar upload
+  const avatarRef = useRef<HTMLInputElement>(null)
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      updateProfile({ avatarDataUrl: ev.target?.result as string })
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
+  // Nickname inline edit
+  const [editingNickname, setEditingNickname] = useState(false)
+  const [nicknameVal,     setNicknameVal]     = useState(currentUser?.nickname ?? '')
+  const saveNickname = () => {
+    updateProfile({ nickname: nicknameVal.trim() || undefined })
+    setEditingNickname(false)
+  }
+
+  // Change password sheet
+  const [pwOpen,    setPwOpen]    = useState(false)
+  const [oldPw,     setOldPw]     = useState('')
+  const [newPw,     setNewPw]     = useState('')
+  const [confirmPw, setConfirmPw] = useState('')
+  const [pwError,   setPwError]   = useState('')
+  const handleChangePassword = () => {
+    setPwError('')
+    if (!oldPw || !newPw)       { setPwError('Please fill in all fields'); return }
+    if (newPw !== confirmPw)    { setPwError('New passwords do not match'); return }
+    if (newPw.length < 6)       { setPwError('Password must be at least 6 characters'); return }
+    try {
+      changePassword(oldPw, newPw)
+      setOldPw(''); setNewPw(''); setConfirmPw('')
+      setPwOpen(false)
+    } catch {
+      setPwError('Current password is incorrect')
+    }
+  }
+
+  const handleLogout = () => {
+    logout()
+    router.replace('/login')
+  }
+
   const [notifStatus,   setNotifStatus]   = useState<NotificationPermission | 'default'>('default')
   const [confirmClear,  setConfirmClear]  = useState(false)
   const [digestSent,    setDigestSent]    = useState(false)
@@ -135,6 +195,101 @@ export default function SettingsPage() {
       </div>
 
       <div className="px-5 py-5 flex flex-col gap-6">
+        {/* Account */}
+        {currentUser && (
+          <div className="settings-section flex flex-col gap-3">
+            <SectionLabel>Account</SectionLabel>
+
+            {/* Profile card */}
+            <div
+              className="rounded-2xl p-4 flex items-center gap-4"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+            >
+              {/* Avatar */}
+              <button
+                onClick={() => avatarRef.current?.click()}
+                className="relative shrink-0 group"
+              >
+                {currentUser.avatarDataUrl ? (
+                  <img
+                    src={currentUser.avatarDataUrl}
+                    alt="avatar"
+                    className="w-14 h-14 rounded-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold"
+                    style={{ background: 'var(--accent-blue)', color: '#fff' }}
+                  >
+                    {avatarInitial(currentUser)}
+                  </div>
+                )}
+                {/* camera overlay on hover */}
+                <div
+                  className="absolute inset-0 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  style={{ background: 'rgba(0,0,0,0.45)' }}
+                >
+                  <Camera size={16} color="white" />
+                </div>
+              </button>
+              <input
+                ref={avatarRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
+
+              {/* Name + email */}
+              <div className="flex-1 min-w-0">
+                {editingNickname ? (
+                  <input
+                    autoFocus
+                    value={nicknameVal}
+                    onChange={(e) => setNicknameVal(e.target.value)}
+                    onBlur={saveNickname}
+                    onKeyDown={(e) => e.key === 'Enter' && saveNickname()}
+                    className="w-full bg-transparent font-semibold text-sm focus:outline-none border-b pb-0.5"
+                    style={{ color: 'var(--text-primary)', borderColor: 'var(--accent-blue)' }}
+                  />
+                ) : (
+                  <button
+                    onClick={() => { setNicknameVal(currentUser.nickname ?? ''); setEditingNickname(true) }}
+                    className="text-left block"
+                  >
+                    <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                      {currentUser.nickname ?? (
+                        <span style={{ color: 'var(--text-muted)' }}>Add nickname</span>
+                      )}
+                    </p>
+                  </button>
+                )}
+                <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
+                  {currentUser.email}
+                </p>
+              </div>
+            </div>
+
+            {/* Change password + Sign out */}
+            <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <SettingsRow
+                icon={<Lock size={16} style={{ color: 'var(--accent-blue)' }} />}
+                iconColor="var(--accent-blue)"
+                title="Change password"
+                onClick={() => { setOldPw(''); setNewPw(''); setConfirmPw(''); setPwError(''); setPwOpen(true) }}
+              />
+              <div style={{ height: '1px', background: 'var(--border)' }} />
+              <SettingsRow
+                icon={<LogOut size={16} style={{ color: 'var(--accent-red)' }} />}
+                iconColor="var(--accent-red)"
+                title="Sign out"
+                onClick={handleLogout}
+                danger
+              />
+            </div>
+          </div>
+        )}
+
         {/* Appearance */}
         <div className="settings-section">
           <SectionLabel>Appearance</SectionLabel>
@@ -308,6 +463,41 @@ export default function SettingsPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Change password sheet */}
+      <Sheet open={pwOpen} onClose={() => setPwOpen(false)} title="Change password">
+        <div className="flex flex-col gap-4 pb-4">
+          {(['Current password', 'New password', 'Confirm new password'] as const).map((label, i) => {
+            const val     = [oldPw, newPw, confirmPw][i]
+            const setter  = [setOldPw, setNewPw, setConfirmPw][i]
+            return (
+              <div key={label}>
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>
+                  {label}
+                </p>
+                <input
+                  type="password"
+                  value={val}
+                  onChange={(e) => setter(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleChangePassword()}
+                  className="w-full rounded-2xl px-4 py-3 text-sm focus:outline-none"
+                  style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                />
+              </div>
+            )
+          })}
+          {pwError && (
+            <p className="text-xs font-medium" style={{ color: 'var(--accent-red)' }}>{pwError}</p>
+          )}
+          <button
+            onClick={handleChangePassword}
+            className="w-full py-3.5 rounded-2xl font-bold text-white text-sm mt-2"
+            style={{ background: 'var(--accent-blue)', boxShadow: '0 4px 16px rgba(79,142,247,0.3)' }}
+          >
+            Update password
+          </button>
+        </div>
+      </Sheet>
 
       {/* Confirm clear dialog */}
       <AnimatePresence>
