@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Habit, HabitLog } from '@/types'
+import { nanoid } from 'nanoid'
+import type { Habit, HabitLog, User } from '@/types'
 
 interface AppStore {
   habits: Habit[]
@@ -27,6 +28,18 @@ interface AppStore {
   setTheme: (theme: 'dark' | 'light') => void
   clearAllData: () => void
   importData: (habits: Habit[], logs: HabitLog[], mode: 'replace' | 'merge') => void
+
+  // Auth state
+  users: User[]
+  currentUserId: string | null
+  userData: Record<string, { habits: Habit[]; logs: HabitLog[]; onboardingDone: boolean }>
+
+  // Auth actions
+  signup: (email: string, password: string, nickname?: string) => void
+  login: (email: string, password: string) => void
+  logout: () => void
+  updateProfile: (updates: { nickname?: string; avatarDataUrl?: string }) => void
+  changePassword: (oldPassword: string, newPassword: string) => void
 }
 
 export const useAppStore = create<AppStore>()(
@@ -36,6 +49,9 @@ export const useAppStore = create<AppStore>()(
       logs: [],
       onboardingDone: false,
       theme: 'dark',
+      users: [],
+      currentUserId: null,
+      userData: {},
 
       addHabit: (habit) =>
         set((s) => ({ habits: [...s.habits, habit] })),
@@ -122,6 +138,66 @@ export const useAppStore = create<AppStore>()(
             return { habits: [...s.habits, ...newHabits], logs: [...s.logs, ...newLogs] }
           })
         }
+      },
+
+      signup: (email, password, nickname) => {
+        const { users } = get()
+        if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
+          throw new Error('email_taken')
+        }
+        const id = nanoid()
+        const user: User = { id, email, password, ...(nickname ? { nickname } : {}) }
+        set((s) => ({ users: [...s.users, user], currentUserId: id }))
+      },
+
+      login: (email, password) => {
+        const { users, currentUserId, habits, logs, onboardingDone, userData } = get()
+        const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase())
+        if (!user) throw new Error('not_found')
+        if (user.password !== password) throw new Error('wrong_password')
+
+        // Flush current user's data before switching
+        const updatedUserData = { ...userData }
+        if (currentUserId) {
+          updatedUserData[currentUserId] = { habits, logs, onboardingDone }
+        }
+
+        // Load new user's data (empty defaults for a brand-new account)
+        const loaded = updatedUserData[user.id] ?? { habits: [], logs: [], onboardingDone: false }
+
+        set({
+          currentUserId: user.id,
+          userData: updatedUserData,
+          habits: loaded.habits,
+          logs: loaded.logs,
+          onboardingDone: loaded.onboardingDone,
+        })
+      },
+
+      logout: () => {
+        const { currentUserId, habits, logs, onboardingDone, userData } = get()
+        if (!currentUserId) return
+        set({
+          userData: { ...userData, [currentUserId]: { habits, logs, onboardingDone } },
+          currentUserId: null,
+          habits: [],
+          logs: [],
+          onboardingDone: false,
+        })
+      },
+
+      updateProfile: (updates) => {
+        const { currentUserId, users } = get()
+        if (!currentUserId) return
+        set({ users: users.map((u) => (u.id === currentUserId ? { ...u, ...updates } : u)) })
+      },
+
+      changePassword: (oldPassword, newPassword) => {
+        const { currentUserId, users } = get()
+        if (!currentUserId) return
+        const user = users.find((u) => u.id === currentUserId)
+        if (!user || user.password !== oldPassword) throw new Error('wrong_password')
+        set({ users: users.map((u) => (u.id === currentUserId ? { ...u, password: newPassword } : u)) })
       },
     }),
     {
