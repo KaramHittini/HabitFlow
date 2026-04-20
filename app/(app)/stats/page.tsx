@@ -113,90 +113,93 @@ export default function StatsPage() {
           />
         )}
 
-        {/* Per-habit — 2-col grid on desktop */}
-        <div className="md:grid md:grid-cols-2 md:gap-3 flex flex-col gap-3">
-        {habits.map((habit) => {
-          const open   = expanded === habit.id
-          const days   = getDaysForRange(range, habit)
-          const streak = calculateStreak(habit, logs)
-          const best   = calculateBestStreak(habit, logs)
-          const total  = getTotalCompletions(habit, logs)
+        {/* Per-habit — 2 independent columns so expanding one never affects the other */}
+        <div className="flex gap-3">
+          {[habits.filter((_, i) => i % 2 === 0), habits.filter((_, i) => i % 2 !== 0)].map((col, ci) => (
+            <div key={ci} className="flex-1 flex flex-col gap-3 min-w-0">
+              {col.map((habit) => {
+                const open   = expanded === habit.id
+                const days   = getDaysForRange(range, habit)
+                const streak = calculateStreak(habit, logs)
+                const best   = calculateBestStreak(habit, logs)
+                const total  = getTotalCompletions(habit, logs)
 
-          return (
-            <div
-              key={habit.id}
-              className="stat-card rounded-2xl overflow-hidden"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-            >
-              <button
-                className="w-full flex items-center gap-3 p-4 text-left"
-                onClick={() => setExpanded(open ? null : habit.id)}
-              >
-                {/* accent dot */}
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0"
-                  style={{ background: habit.color + '1a' }}
-                >
-                  {habit.icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>
-                    {habit.name}
-                  </p>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                    {streak > 0 ? `🔥 ${streak}-day streak` : `${total} total completions`}
-                  </p>
-                </div>
-                <div
-                  className="w-6 h-6 rounded-lg flex items-center justify-center transition-transform"
-                  style={{ background: 'var(--bg-elevated)', transform: open ? 'rotate(90deg)' : 'none' }}
-                >
-                  <ChevronRight size={12} style={{ color: 'var(--text-muted)' }} />
-                </div>
-              </button>
-
-              <AnimatePresence>
-                {open && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.22 }}
-                    className="overflow-hidden"
+                return (
+                  <div
+                    key={habit.id}
+                    className="stat-card rounded-2xl overflow-hidden"
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
                   >
-                    <div
-                      className="px-4 pb-5 pt-1 flex flex-col gap-4"
-                      style={{ borderTop: '1px solid var(--border)' }}
+                    <button
+                      className="w-full flex items-center gap-3 p-4 text-left"
+                      onClick={() => setExpanded(open ? null : habit.id)}
                     >
-                      <div className="grid grid-cols-2 gap-2 mt-2">
-                        {[
-                          { label: 'Current streak', value: `${streak} days` },
-                          { label: 'Best streak',    value: `${best} days`   },
-                          { label: 'Total',          value: `${total}×`      },
-                          { label: 'Period',         value: range === '7d' ? '7 days' : range === '30d' ? '30 days' : 'All time' },
-                        ].map(({ label, value }) => (
-                          <div
-                            key={label}
-                            className="rounded-xl p-3"
-                            style={{ background: 'var(--bg-elevated)' }}
-                          >
-                            <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>
-                              {label}
-                            </p>
-                            <p className="text-sm font-bold font-display" style={{ color: 'var(--text-primary)' }}>
-                              {value}
-                            </p>
-                          </div>
-                        ))}
+                      <div
+                        className="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0"
+                        style={{ background: habit.color + '1a' }}
+                      >
+                        {habit.icon}
                       </div>
-                      <HabitBarChart habit={habit} logs={logs} days={days.slice(-30)} />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>
+                          {habit.name}
+                        </p>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                          {streak > 0 ? `🔥 ${streak}-day streak` : `${total} total completions`}
+                        </p>
+                      </div>
+                      <div
+                        className="w-6 h-6 rounded-lg flex items-center justify-center transition-transform"
+                        style={{ background: 'var(--bg-elevated)', transform: open ? 'rotate(90deg)' : 'none' }}
+                      >
+                        <ChevronRight size={12} style={{ color: 'var(--text-muted)' }} />
+                      </div>
+                    </button>
+
+                    <AnimatePresence>
+                      {open && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.22 }}
+                          className="overflow-hidden"
+                        >
+                          <div
+                            className="px-4 pb-5 pt-1 flex flex-col gap-4"
+                            style={{ borderTop: '1px solid var(--border)' }}
+                          >
+                            <div className="grid grid-cols-2 gap-2 mt-2">
+                              {[
+                                { label: 'Current streak', value: `${streak} days` },
+                                { label: 'Best streak',    value: `${best} days`   },
+                                { label: 'Total',          value: `${total}×`      },
+                                { label: 'Period',         value: range === '7d' ? '7 days' : range === '30d' ? '30 days' : 'All time' },
+                              ].map(({ label, value }) => (
+                                <div
+                                  key={label}
+                                  className="rounded-xl p-3"
+                                  style={{ background: 'var(--bg-elevated)' }}
+                                >
+                                  <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>
+                                    {label}
+                                  </p>
+                                  <p className="text-sm font-bold font-display" style={{ color: 'var(--text-primary)' }}>
+                                    {value}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                            <HabitBarChart habit={habit} logs={logs} days={days.slice(-30)} />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )
+              })}
             </div>
-          )
-        })}
+          ))}
         </div>
       </div>
     </div>
