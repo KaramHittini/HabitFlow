@@ -3,7 +3,7 @@
 import { useRef, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, Flame, MoreHorizontal } from 'lucide-react'
-import { addMonths, subMonths, format } from 'date-fns'
+import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
@@ -24,7 +24,6 @@ interface HabitDetailProps { habit: Habit }
 export function HabitDetail({ habit }: HabitDetailProps) {
   const router = useRouter()
   const { logs, deleteHabit } = useAppStore()
-  const [month,       setMonth]       = useState(new Date())
   const [editOpen,    setEditOpen]    = useState(false)
   const [menuOpen,    setMenuOpen]    = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
@@ -164,24 +163,12 @@ export function HabitDetail({ habit }: HabitDetailProps) {
           ))}
         </div>
 
-        {/* monthly calendar */}
+        {/* 30-day strip */}
         <div className="rounded-2xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={() => setMonth((d) => subMonths(d, 1))}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-sm hover:bg-white/5"
-              style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}
-            >‹</button>
-            <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
-              {format(month, 'MMMM yyyy')}
-            </p>
-            <button
-              onClick={() => setMonth((d) => addMonths(d, 1))}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-sm hover:bg-white/5"
-              style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}
-            >›</button>
-          </div>
-          <MonthCalendar habit={habit} logs={logs} month={month} />
+          <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>
+            Last 30 days
+          </p>
+          <MonthCalendar habit={habit} logs={logs} />
         </div>
 
         {/* time of day insight */}
