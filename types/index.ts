@@ -27,6 +27,14 @@ export interface HabitLog {
   note?: string
 }
 
+export interface User {
+  id: string
+  email: string
+  password: string       // plain text — no server, intentional for this no-DB phase
+  nickname?: string
+  avatarDataUrl?: string // base64 from file upload
+}
+
 export interface AppState {
   habits: Habit[]
   logs: HabitLog[]
